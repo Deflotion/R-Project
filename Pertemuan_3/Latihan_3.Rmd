@@ -8,7 +8,7 @@ output: html_document
 ## Load Library
 
 ```{r}
-library(dbplyr)
+library(dplyr)
 library(readxl)
 ```
 
@@ -95,4 +95,55 @@ vis_miss(minimarket_clean2 %>% select(rating_tempat_fix))
 
 ```{r}
 names(penduduk) <- c("nama_kecamatan", "LakiLaki", "Perempuan")
+penduduk
+```
+
+```{r}
+# Memperbaiki dataset penduduk
+penduduk2 <- penduduk%>%filter(nama_kecamatan!="Tahun"&nama_kecamatan!="Kota Jakarta Selatan")%>%
+  mutate(LakiLaki=as.numeric(LakiLaki))%>%
+  mutate(Perempuan=as.numeric(Perempuan))%>%
+  mutate(Total=LakiLaki+Perempuan)
+```
+
+```{r}
+penduduk2
+```
+
+## Analisis Data
+
+### 1. Rating Indomaret VS Alfamart
+
+```{r}
+minimarket_clean2%>%select(rating_tempat_fix,store,nama_kecamatan)%>%group_by(store)%>%summarise(store_avg_rate=mean(rating_tempat_fix))
+```
+
+### 2. Jumlah Toko Indomaret VS Alfamart
+
+```{r}
+jumlah_toko<-minimarket_clean2%>%select(store)%>%group_by(store)%>%count()
+jumlah_toko
+```
+
+### 3. Rasio Jumlah Minimarket dengan Jumlah Penduduk
+
+```{r}
+toko_indomaret <- minimarket_clean2%>%filter(store=="Indomaret")%>%select(store,nama_kecamatan)%>%group_by(nama_kecamatan)%>%count()
+
+toko_alfamart <- minimarket_clean2%>%filter(store=="Alfamart")%>%select(store,nama_kecamatan)%>%group_by(nama_kecamatan)%>%count()
+
+toko_indomaret
+toko_alfamart
+```
+
+```{r}
+toko_all <- left_join(toko_indomaret,toko_alfamart,"nama_kecamatan")
+
+names(toko_all) <- c("nama_kecamatan","Alfamart","Indomaret")
+
+toko_all_with_penduduk <- left_join(toko_all,penduduk2,"nama_kecamatan")
+
+toko_all_with_penduduk2 <- toko_all_with_penduduk%>%
+  mutate(ratio_alfamart=Total/Alfamart)%>%
+  mutate(ratio_alfamart=Total/Indomaret)
 ```
