@@ -1,0 +1,98 @@
+---
+title: "Latihan"
+author: "Danny"
+date: "2023-10-01"
+output: html_document
+---
+
+## Load Library
+
+```{r}
+library(dbplyr)
+library(readxl)
+```
+
+## Load Data
+
+```{r}
+minimarket <- read.csv("alfamart_indomart.csv")
+penduduk <- read_excel("Jumlah Penduduk Menurut Kecamatan dan Jenis Kelamin di Kota Jakarta Selatan.xlsx")
+```
+
+## Glimpse Data
+
+```{r}
+glimpse(penduduk)
+```
+
+```{r}
+library(naniar)
+vis_miss(minimarket)
+```
+
+## Check Outlier
+
+```{r}
+minimarket %>% select(rating_tempat) %>% filter(rating_tempat>5)
+```
+
+### Duplikasi Data
+
+```{r}
+minimarket %>% distinct()
+```
+
+### Check Missing Value
+
+```{r}
+# cari NA
+minimarket%>%filter(is.na(rating_tempat))%>%select(nama_tempat,rating_tempat)
+```
+
+```{r}
+# cari 0
+minimarket%>%filter(rating_tempat==0 | is.na(rating_tempat))%>%select(nama_tempat,rating_tempat)
+```
+
+### Inkonsistensi Data
+
+```{r}
+minimarket%>%select(nama_kecamatan)%>%distinct()
+```
+
+### Koreksi Dataset
+
+```{r}
+minimarket_clean <- minimarket%>%
+  distinct()%>% mutate(nama_kecamatan=ifelse(nama_kecamatan=="Pancorang","Pancoran",nama_kecamatan))%>%
+  mutate(nama_kecamatan=ifelse(nama_kecamatan=="Kebayoran Lamma","Kebayoran Lama",nama_kecamatan))%>%
+  mutate(nama_kecamatan=ifelse(nama_kecamatan=="Pasar Mingu","Pasar Minggu",nama_kecamatan))%>%
+  mutate(rating_tempat_fix=ifelse(rating_tempat>5,rating_tempat/10,rating_tempat))
+```
+
+```{r}
+minimarket_clean%>%select(nama_kecamatan)%>%distinct()
+```
+
+```{r}
+avg_rating <- minimarket_clean%>%select(rating_tempat_fix,store)%>%filter(store=="Indomaret")
+
+avg_rating_indomaret <- round(mean(avg_rating$rating_tempat_fix, na.rm = T),2)
+
+avg_rating <- minimarket_clean%>%select(rating_tempat_fix,store)%>%filter(store=="Alfamart")
+
+avg_rating_alfamart <- round(mean(avg_rating$rating_tempat_fix, na.rm = T),2)
+
+# Imputasi Missing Value
+minimarket_clean2 <- minimarket_clean%>%mutate(rating_tempat_fix=ifelse(is.na(rating_tempat_fix)|rating_tempat_fix==0&store=="Indomaret",avg_rating_indomaret,rating_tempat_fix))
+
+minimarket_clean2 <- minimarket_clean%>%mutate(rating_tempat_fix=ifelse(is.na(rating_tempat_fix)|rating_tempat_fix==0&store=="Alfamart",avg_rating_indomaret,rating_tempat_fix))
+```
+
+```{r}
+vis_miss(minimarket_clean2 %>% select(rating_tempat_fix))
+```
+
+```{r}
+names(penduduk) <- c("nama_kecamatan", "LakiLaki", "Perempuan")
+```
