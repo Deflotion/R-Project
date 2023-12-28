@@ -1,0 +1,131 @@
+---
+title: "UTS R"
+author: "Danny Revaldo"
+date: "2023-10-21"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r}
+library(tidyverse)
+```
+
+1.  DATA PREPROCESSING:
+a)  Import data CSV tersebut kedalam project kalian, Ada berapa kolom dan data didalam dataset tersebut?
+
+```{r}
+df <- read.csv("dataset_UTS_bahasaR.csv")
+
+jml_col <- ncol(df)
+jml_row <- nrow(df)
+
+paste("Jumlah kolomnya:",jml_col)
+paste("Jumlah datanya:",jml_row)
+```
+
+b)  Buat dataframe baru dengan hanya mengambil kolom Judul (title), Durasi (runtime), Tanggal Rilis (release_date), Budget (budget), Pendapatan (revenue), Popularitas (popularity), dan Rating (vote_average) seperti tabel dibawah ini (dengan nama variabel datasetUTS)!
+
+```{r}
+datasetUTS <- df%>%select(title,runtime,release_date,budget,revenue,popularity,vote_average)
+
+datasetUTS%>%head(10)
+```
+
+c)  Film dikatakan sukses jika memiliki kriteria jika proyek film tersebut memiliki budget dibawah rata-rata namun memiliki pendapatan tinggi, sebaliknya film yang gagal memiliki kriteria jika proyek film tersebut memiliki budget diatas rata-rata namun memiliki pendapatan rendah.Carilah 10 film yang sukses (dengan nama variabel top10success) dan 10 film yang gagal (dengan nama variabel top10failure) di tahun 2015.
+
+```{r}
+rata_budget <- datasetUTS%>%mutate(tahun_rilis=year(as.Date(release_date)))
+
+rata_budget <- rata_budget%>%filter(tahun_rilis==2015)%>%mutate(rata_rata_budget=mean(budget))
+
+top10success <-rata_budget%>%filter(budget<rata_rata_budget & revenue>budget)%>%arrange(desc(revenue))%>%head(10)
+
+top10success
+```
+
+```{r}
+top10failure <- rata_budget%>%filter(budget>rata_rata_budget & revenue<budget &tahun_rilis==2015)%>%arrange(desc(budget))%>%head(10)
+
+top10failure
+```
+
+d)  Dari dataset tersebut, terdapat film-film sequel, trilogi atau prequel dilihat dari judul film yang sama namun diikuti dengan angka seperti Avatar 1 dan Avatar 2 atau dengan "subtitle" berbeda seperti Harry Potter and The Goblet of Fire dan Harry Potter and The Prisoner of Azkaban.
+
+```{r}
+franchise_data<-datasetUTS%>%mutate(franchise = gsub("^(\\w+\\s+\\w+).*", "\\1", datasetUTS$title))
+
+# Mengelompokkan judul film berdasarkan dua kata pertama (tanpa angka) dan menghitung total revenue dan mean vote_average
+franchise_data <- franchise_data %>%
+  group_by(franchise) %>%
+  summarise(total_revenue = sum(revenue),avg_rating = mean(vote_average))%>%
+  arrange(desc(total_revenue))
+```
+
+1.  Carilah 5 franchise film besar yang memiliki sequel, trilogi, atau prequel dengan total pendapat yang tertinggi! (dengan nama variable top5franchise)
+
+```{r}
+# Menampilkan hasil franchise dan total revenue
+top5franchise <- franchise_data%>%head(5)
+top5franchise%>%select(franchise,total_revenue)
+```
+
+2.  Dari 5 franchise tersebut, manakah yang memiliki rata-rata rating tertinggi? (dengan nama variabel bestfranchise)
+
+```{r}
+# Menampilkan hasil pengelompokkan, total revenue, mean vote_average, dan franchise dengan rating tertinggi
+bestfranchise<-top5franchise%>%select(franchise,avg_rating)
+
+
+bestfranchise%>%arrange(desc(avg_rating))%>%head(1)
+```
+
+e)  Carilah insight lain yang dapat diambil dari dataset tersebut! Jelaskan dengan tag komen (\#)
+
+```{r}
+# filter nilai 0
+hub_durasi_rating_popu <- datasetUTS%>%filter(popularity!=0&vote_average!=0&runtime!=0)
+  
+# Membuat scatter plot untuk melihat hubungan antara durasi film dan popularitas
+ggplot(hub_durasi_rating_popu, aes(x = runtime, y = popularity)) +
+  geom_point(color = "blue") +
+  labs(x = "Durasi Film (menit)", y = "Popularitas", title = "Hubungan Durasi Film dengan Popularitas") +
+  theme_minimal()+theme(plot.title = element_text(hjust = 0.5))
+
+# Membuat scatter plot untuk melihat hubungan antara durasi film dan rating penonton
+ggplot(hub_durasi_rating_popu, aes(x = runtime, y = vote_average)) +
+  geom_point(color = "green") +
+  labs(x = "Durasi Film (menit)", y = "Rating Penonton", title = "Hubungan Durasi Film dengan Penilaian Penonton") +
+  theme_minimal()+theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(hub_durasi_rating_popu, aes(x = runtime, y = popularity, color = vote_average)) +
+  geom_point(alpha=0.7) +
+  labs(x = "Durasi Film (menit)", y = "Popularitas", title = "Hubungan Durasi Film dengan Popularitas dan Rating Penonton",color="Rating") +
+  scale_color_viridis_c() + scale_size_continuous(range = c(3, 15)) +
+  theme_minimal()+theme(plot.title = element_text(hjust = 0.5))
+```
+
+Dari hasil visualisasi diatas bisa kita ambil insight bahwa semakin lama durasi film dan tingginya popularitas tidak menjamin akan mendapat rating yang sempurna. Dari visualisasi data yang ketiga rata-rata film kebanyakan diantara 90 sampai 150 menit saja untuk popularitasnya dikisaran 0-250 sedikit film yang mencapai diatas 500 popularitasnya dan ratingnya dikisaran 5-7.5. Ada 1 film yang durasinya melebihi 300 menit yaitu "carlos"
+
+2.  DATA VISUALIZATION
+
+```{=html}
+<!-- -->
+```
+a)  Buatlah Bar Chart untuk menunjukkan total pendapatan dari setiap tahun 2000-2015!
+
+    ```{r}
+    total_pendapatan_2015 <- datasetUTS%>%mutate(tahun=year(ymd(release_date)))%>%filter(tahun<=2015&tahun>=2000)%>%group_by(tahun)%>%summarise(jumlah= sum(revenue))
+
+    ggplot(total_pendapatan_2015, aes(x = tahun, y = jumlah, fill= tahun))+ geom_bar(stat = "identity",width = 0.8) + labs(title = "Total Pendapatan dari 2000-2015", x = "Tahun", y = "Pendapatan")+ scale_fill_gradient(low="green",high="yellow") + scale_y_continuous(labels = scales::unit_format(unit = "", scale = 1e-0)) +theme_minimal() +theme(plot.title = element_text(hjust = 0.5),panel.background = element_rect(fill = "#8390fa"),plot.background = element_rect(fill = "#99b2dd") )
+    ```
+
+b)  Gunakan visualisasi untuk menunjukkan hubungan antara popularitas dan revenue Dan jabarkan dengan narasi dengan tag komen (\#)!
+
+    ```{r}
+    hubungan_pop_pen <- datasetUTS%>%select(title,popularity,revenue)
+
+    ggplot(hubungan_pop_pen, aes(x=popularity , y=revenue)) + geom_bar(stat = "identity",color="blue") + scale_y_continuous(labels = scales::unit_format(unit = "", scale = 1e-0)) + labs(title = "Hubungan popularitas dengan pendapatan")+theme_classic()+theme(plot.title = element_text(hjust = 0.5))
+    ```
+
+Dari hasil visualisasi tentang tingkat popularitas dan pendapatan sebuah film bisa diambil kesimpulan bahwa popularitas tinggi tidak menjamin pendapatan yang tinggi. Tetapi popularitas yang dibawah 250 rata-rata pendapatannya diatas pendapatan dengan popularitas diatas 750 dan sekitar popularitas 170 keatas mencapai pendapatan hingga melebihi 2 juta USD dalam sekali tayangnya dan film itu adalah Avatar mencapai 2 Milyar USD. Lalu sedikit film yang mempunyai popularitas lebih dari 250 dan popularitas yang tertinggi dipegang oleh Minions sebesar 875

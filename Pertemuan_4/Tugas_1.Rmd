@@ -1,0 +1,232 @@
+---
+title: "Tugas_1"
+author: "Danny Revaldo"
+nim: "36220019"
+date: "2023-10-07"
+output: html_document
+---
+
+## Bagian I (Nilai 20)
+
+1\. Buatlah sebuah fungsi yang menghitung jumlah seluruh bilangan dari 1 hingga N.
+
+```{r}
+hitung_bilangan <- function(n){
+  return(sum(1:n))
+}
+hitung_bilangan(9)
+```
+
+2\. Buatlah sebuah fungsi untuk menghitung volume sebuah tabung lingkaran (masukan berupa D atau diameter dan T adalah tinggi)
+
+```{r}
+v_tabung <- function(d,t){
+  r <- d/2
+  return(pi*r^2*t)
+}
+
+v_tabung(8,9)
+```
+
+3\. Tuliskan sebuah fungsi R yang menghasilkan deret bilangan genap sejumlah N.
+
+```{r}
+deret_bilangan <- function(n){
+  return(seq(0, by = 2,length.out=n))
+}
+
+deret_bilangan(11)
+```
+
+4\. Tuliskan sebuah fungsi R yang menghasilkan deret fibonaci sejumlah N.
+
+```{r}
+fibonacci <- function(N) {
+  if (N <= 1) {
+    return(rep(0, N+1))
+  } else {
+    fib_sequence <- numeric(N)
+    fib_sequence[1:2] <- 0:1
+    for (i in 3:N) {
+      fib_sequence[i] <- fib_sequence[i - 1] + fib_sequence[i - 2]
+    }
+    return(fib_sequence)
+  }
+}
+
+fibonacci(4)
+```
+
+5\. Buat fungsi yang menghitung jumlah digit (angka) dalam sebuah bilangan bulat positif. Misal: 93034 ➔ 5
+
+```{r}
+jml_angka <- function(n){
+  return(nchar(as.character(n)))
+}
+
+jml_angka(8576856)
+```
+
+## Bagian II (Nilai 30)
+
+1\. Tuliskan fungsi R untuk mengonversi angka bulan ke B menjadi nama bulan. Misalnya, jika inputnya adalah B=1, hasilnya adalah "Januari", B=2 hasilnya adalah "Februari", B=13 hasilnya adalah "Januari" dsb.
+
+```{r}
+cari_bulan <- function(b){
+  bulan <- c("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
+  
+  return(bulan[b%%12])
+}
+cari_bulan(100)
+```
+
+2\. Buat fungsi yang menghitung jumlah digit pecahan (angka) dalam sebuah bilangan real. Misal: 93.034 ➔ 3
+
+```{r}
+hitung_digit_pecahan <- function(bilangan) {
+  pecahan_str <- as.character(bilangan)  
+  if (grepl(".", pecahan_str)) {  
+    digit_pecahan <- nchar(sub(".*\\.", "", pecahan_str))  
+    return(digit_pecahan)
+  }
+}
+
+hitung_digit_pecahan(100.9848)
+```
+
+3\. Tuliskan fungsi dalam R untuk menentukan apakah sebuah tahun yang diberikan adalah tahun kabisat atau bukan.
+
+```{r}
+thn_kabisat <- function(thn){
+  if(thn%%4 == 0){
+    print("Tahun Kabisat")
+  }else{
+    print("Bukan Kabisat")
+  }
+}
+
+thn_kabisat(2020)
+```
+
+4\. Buat fungsi untuk menghitung huruf konsonan (selain a,i,u,e,o) dalam sebuah teks.
+
+```{r}
+hitung_konsonan <- function(teks) {
+  # Mengubah teks menjadi huruf kecil
+  teks <- tolower(teks)
+  
+  # Menghitung jumlah konsonan
+  jumlah_konsonan <- sum(nchar(gsub("[a, i, u, e, o]", "", teks)))
+  
+  return(jumlah_konsonan)
+}
+
+hitung_konsonan("a d f g f")
+
+```
+
+5\. Tuliskan fungsi yang mengkonversi nilai menjadi huruf (A, B+, dsb).
+
+```{r}
+nilai <- function(a){
+  if(a>=80 & a <=100){
+    grade <- "A"
+    bobot <- 4
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya Memuaskan"))
+  }else if(a>=73 & a <=79.99){
+    grade <- "B+"
+    bobot <- 3.5
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya Baik"))
+  }else if(a>=66 & a <=72.99){
+    grade <- "B"
+    bobot <- 3
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya Baik"))
+  }else if(a>=58 & a <=65.99){
+    grade <- "C+"
+    bobot <- 2.5
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya RAta-rata"))
+  }else if(a>=51 & a <=57.99){
+    grade <- "C"
+    bobot <- 2
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya Rata-rata"))
+  }else if(a>=41 & a <=50.99){
+    grade <- "D"
+    bobot <- 1
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Hasilnya Kurang"))
+  }else{
+    grade <- "E"
+    bobot <- 0
+    print(paste("Gradenya adalah",grade,"dan bobot didapat", bobot, "Anda Gagal!!"))
+  }
+}
+nilai(41)
+```
+
+## Bagian III (Nilai 50)
+
+1\. Buatlah sebuah fungsi untuk membuat insial dari sebuah teks. Misal: David Beckham menjadi DB
+
+```{r}
+inisial_nama <- function(nama){
+  splited <- strsplit(nama, " ")[[1]]
+  jml_kata <- length(splited)
+  result <- c(1:jml_kata)
+  for (i in 1:jml_kata) {
+    inisial <- substr(splited[i],1,1)
+    result[i] <- paste(c(inisial,paste("",collapse= "")),collapse="")
+  }
+  paste(result,collapse = "")
+}
+
+inisial_nama("David Beckham")
+```
+
+2\. Buat sebuah fungsi yang menghitung jumlah kemunculan angka yang ada dalam sebuah teks. Misal "PERTAMINA92" jumlahnya adalah 2 ( 9 dan 2)
+
+```{r}
+hitung_angka <- function(n) {
+  angka <- gsub("\\D", "", n) 
+  return(nchar(angka) )
+}
+hitung_angka("oakwokawkoaw756")
+```
+
+3\. Buat fungsi yang memeriksa apakah suatu bilangan n habis dibagi dua bilangan x DAN y. Semua masukan adalah bilangan positif dan bukan nol.
+
+Contoh:
+
+-   n = 3, x = 1, y = 3 =\> TRUE karena 3 habis dibagi 1 dan 3
+
+-   n = 100, x = 5, y = 3 =\> FALSE karena 100 tidak habis dibagi 3
+
+```{r}
+habis_bagi <-function(n,x,y){
+  return(n%%x==0&n%%y==0)
+}
+habis_bagi(15,5,3)
+habis_bagi(16,3,2)
+```
+
+4\. Buat sebuah fungsi yang menerima inputan vector berisi nama, dan menghasilkan nama terpendek dari vector tersebut.
+
+```{r}
+nama_terpendek <- function(nama){
+  panjang_nama <- nchar(nama)
+  indeks_terpendek <- which.min(panjang_nama)
+  return(nama[indeks_terpendek])
+}
+nama_terpendek(c("Alice", "Bob", "Charlie", "David", "Eva"))
+```
+
+5\. Diketahui jadwal piket satpam selama 7 hari secara bergantian mulai dari hari pertama adalah "Budi", "Slamet", "Andi", "Tono", "Roni", "Dodi", "Riski". Buatkan sebuah fungsi untuk mengetahui siapa orang yang piket pada hari ke N.
+
+```{r}
+jadwal_piket <- function(nomor){
+  satpam <- c("Budi", "Slamet", "Andi", "Tono", "Roni", "Dodi", "Riski")
+  hari <- c("Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu")
+  
+  print(paste("yang bertugas pada hari",hari[nomor%%7],"dan yang bertugas adalah", satpam[nomor%%7]))
+}
+
+jadwal_piket(120)
+```

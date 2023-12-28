@@ -1,0 +1,88 @@
+---
+title: "Tugas"
+author: "Danny Revaldo"
+date: "2023-11-27"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+df <- read.csv("dataset_UTS_bahasaR.csv")
+```
+1. Waktu tentang pendapatan seluruh film 20 tahun terakhir dan puncaknya ada di 2010 keatas
+```{r}
+df_visual <- df%>%select(title,runtime,release_date,budget,revenue,popularity,vote_average)
+df_visual <- df_visual%>%mutate(tahun_rilis=year(as.Date(release_date)))
+
+pendapatan_per_thn <- df_visual%>%group_by(tahun_rilis)%>%summarise(total=sum(revenue))
+
+pendapatan_per_thn %>%
+ filter(tahun_rilis >= 1984L & tahun_rilis <= 2016L | is.na(tahun_rilis)) %>%
+ ggplot() +
+  aes(x = tahun_rilis, y = total, colour = total) +
+  geom_line(size=1) +
+  geom_point() +
+  scale_color_gradient() +
+  labs(
+    x = "Tahun",
+    y = "Total Pendapatan",
+    title = "Pendapatan Film setiap Tahun",
+    color = "Total Pendapatan"
+  ) +
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(labels = scales::unit_format(unit = "", scale = 1e-0))
+```
+
+```{r}
+df_bahasa <- df %>%
+  group_by(original_language) %>%
+  summarise(total_film = n())
+df_bahasa <- df_bahasa%>%mutate(original_language = ifelse(original_language != "en", "Others", as.character(original_language))) %>%
+  group_by(original_language) %>%
+  summarise(total_film = sum(total_film))
+```
+2. Kategori tentang bahasa apa yang sering digunakan dalam semua film didominasi oleh bahasa inggris
+```{r}
+ggplot(df_bahasa, aes(x = "", y = total_film, fill = original_language)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y") +
+  theme_void() +
+  labs(title = "Diagram Lingkaran", fill = "original language") +
+  geom_text(aes(label = scales::percent(total_film/sum(total_film))), 
+            position = position_stack(vjust = 0.5), 
+            color = "white", size = 4)+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+3. Distribusi tentang rating digunakan pada tahun 2016 ada beberapa outlier yang melebihi batas budget seharusnya
+```{r}
+df_budget <- df_visual%>%filter(tahun_rilis==2016)
+ggplot(df_budget) +
+  aes(x = "", y = vote_average) +
+  geom_boxplot(fill = "#112446") +
+  labs(
+    y = "Rating",
+    title = "Box Plot rating pada tahun 2016"
+  )+
+  theme_light()+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(labels = scales::unit_format(unit = "", scale = 1e-0))
+```
+
+```{r}
+library(mapview)
+library(sf)
+
+df_3 <- read.csv("alfamart_indomart.csv")
+
+df_3 <- df_3%>%select(nama_tempat,alamat_tempat,longitude,latitude)
+
+mymap <- st_as_sf(df_3, coords = c("longitude", "latitude"), crs = 4326)
+mapview(mymap)
+```

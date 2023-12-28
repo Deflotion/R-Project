@@ -1,0 +1,94 @@
+---
+title: "PERCOBAAN DUNIA 2"
+output: html_document
+date: "2023-12-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Data
+
+```{r}
+library(ggplot2)
+library(randomForest)
+```
+
+## Load Data 
+
+```{r}
+# Load the training dataset
+training <- read.csv("training.csv") 
+```
+
+ 
+## Basic Preprocessing
+
+```{r}
+# Basic Preprocessing: Remove rows with missing values
+# training <- na.omit(training)
+
+# Fill missing or empty values in the 'area' column with "area [angka]" from the range 0-9
+area <- which(training$area == "")
+training$area[area] <- paste0("area ", sample(0:9, length(area), replace = TRUE))
+
+# Fill missing or empty values in the 'market' column with random 'L' or 'K'
+market <- which(training$market == "")
+training$market[market] <- sample(c("L", "K"), length(market), replace = TRUE)
+
+kolom_numerik <- sapply(training, is.numeric)
+df <- training[, kolom_numerik]
+
+means <- colMeans(df, na.rm = TRUE)
+
+for (col in colnames(df)) {
+  df[is.na(df[col]), col] <- means[col]
+}
+
+training[, kolom_numerik] <- df
+
+# Split the data into training and testing sets
+set.seed(123)  # Set seed for reproducibility
+split_ratio <- 0.99  # 99% training, 1% testing
+num_rows <- nrow(training)
+train_indices <- sample(1:num_rows, size = round(split_ratio * num_rows))
+train_data <- training[train_indices, ]
+test_data <- training[-train_indices, ]
+
+```
+
+## Training and Evaluating Model
+
+```{r}
+# Training the Random Forest model using all predictors (Y ~ .)
+model <- randomForest(Y ~ ., data = train_data, ntree=2000)
+
+# Make predictions on the test set using the Random Forest model
+predictions <- predict(model, newdata = test_data)
+
+# Evaluate the model using Root Mean Squared Error (RMSE)
+rmse<- sqrt(mean((predictions - test_data$Y)^2))
+print(paste("Random Forest Root Mean Squared Error:", rmse))
+
+```
+
+## Kaggle Subsmission
+
+```{r}
+# Load the Kaggle testing dataset
+kaggle.test  <- read.csv("testing.csv") 
+
+# Make predictions on the Kaggle testing set
+kaggle.test.predictions <- predict(model, newdata = kaggle.test)
+
+# Create a submission data frame with 'index' and 'Y' columns
+submission <- cbind(kaggle.test$index, kaggle.test.predictions)
+colnames(submission) <- c("index", "Y")
+
+# Generate a unique filename based on the current timestamp
+filename = paste("submission",format(Sys.time(), "%Y%m%d%H%M%S"),".csv", sep="")
+
+# Save the submission data frame to a CSV file
+write.csv(submission, filename, row.names = FALSE)
+```

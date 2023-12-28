@@ -1,0 +1,145 @@
+---
+title: "Basline Machine Learning For Kaggle"
+output: html_document
+date: "2023-11-12"
+---
+
+## Load Data
+
+```{r}
+library(tidyverse)
+library(randomForest)
+library(randomForestExplainer)
+library(neuralnet)
+library(keras)
+library(dummy)
+```
+
+## Load Data
+
+```{r}
+# Load the training dataset
+training <- read.csv("training.csv")
+testing <- read.csv("testing.csv")
+tes <- read.csv("submission20231129132211.csv")
+```
+
+## Basic Preprocessing
+
+```{r}
+# Basic Preprocessing: Remove rows with missing values
+training <- na.omit(training)
+training <- training[!(training$market=="") | (training$area==""), ]
+```
+
+```{r}
+#for (i in 0:27) {
+  #col_name <- paste0("X.", i)
+  #condition <- as.numeric(training[[col_name]]) > 47000
+  #training[[col_name]][condition] <- gsub("0+$", "", training[[col_name]][condition], perl = TRUE)
+  #training[[col_name]] <- as.numeric(training[[col_name]])
+#}
+
+#for (i in 0:27) {
+  #col_name <- paste0("X.", i)
+  #condition <- as.numeric(testing[[col_name]]) > 47000
+  #testing[[col_name]][condition] <- gsub("0+$", "", testing[[col_name]][condition], perl = TRUE)
+  #testing[[col_name]] <- as.numeric(testing[[col_name]])
+#}
+```
+
+```{r}
+#for (i in 0:27) {
+  #plot(training[[paste0("X.", i)]], training$y, 
+  #     type = "o", col = "blue", pch = 16,
+ #      main = paste0("Plot ", i), xlab = paste0("X.", i), ylab = "y")
+#}
+```
+
+
+```{r}
+# Split the data into training and testing sets
+set.seed(114)  # Set seed for reproducibility
+split_ratio <- 0.8  # 80% training, 20% testing
+num_rows <- nrow(training)
+
+train_indices <- sample(1:num_rows, size = round(split_ratio * num_rows))
+train_data <- training[train_indices, ]
+test_data <- training[-train_indices, ]
+```
+
+## Training and Evaluating Model
+
+```{r}
+# Assume 'categorical_column1' and 'categorical_column2' are the names of your categorical columns
+categorical_columns <- c('area', 'market')
+
+# One-hot encode categorical columns
+train_data <- cbind(train_data, model.matrix(~ ., data = train_data[, categorical_columns]))
+test_data <- cbind(test_data, model.matrix(~ ., data = test_data[, categorical_columns]))
+
+# Define the target variable column name (replace "target_column" with your actual column name)
+target_column <- "Y"
+
+# Convert target column to numeric
+train_data$target_column <- as.numeric(train_data$target_column)
+test_data$target_column <- as.numeric(test_data$target_column)
+
+# Create formula for neural network
+formula_string <- paste(target_column, "~", paste(names(train_data)[!names(train_data) %in% c(target_column, categorical_columns)], collapse = "+"))
+
+# Define the neural network formula explicitly
+nn_formula <- as.formula(formula_string)
+
+# Create and train the neural network model
+nn_model <- neuralnet(nn_formula, data = train_data, hidden = c(5, 2), linear.output = TRUE)
+
+# Make predictions on the test set
+predictions <- predict(nn_model, newdata = test_data)
+
+# Convert predictions to binary values
+predictions <- ifelse(predictions > 0.5, 1, 0)
+
+# Evaluate the model (replace "actual_values" with the actual target values in your test set)
+accuracy <- mean(predictions == test_data$target_column)
+cat("Accuracy:", accuracy, "\n")
+```
+
+
+# Training the linear regression model using all predictors (Y ~ .)
+
+# Create and train the Random Forest model
+# rf_model <- randomForest(formula = as.formula("Y ~ ."), data = train_data, ntree = 1000)
+
+nn_model = neuralnet("Y ~ .", data=train_data, hidden=c(4,2),linear.output = FALSE)
+
+#rf_explainer <- randomForestExplainer::explain_rf(rf_model, data = as.matrix(train_data[, -which(names(train_data) == Y)]), y = train_data[[Y]])
+
+# Make predictions on the test set
+predictions <- predict(nn_model, newdata = test_data)
+
+# Evaluate the model using Mean Squared Error (MSE)
+mse <- mean((predictions - test_data$Y)^2)
+print(paste("Mean Squared Error:", mse))
+
+
+## Kaggle Subsmission
+
+```{r}
+# Load the Kaggle testing dataset
+kaggle.test  <- read.csv("testing.csv") 
+
+# Make predictions on the Kaggle testing set
+kaggle.test.predictions <- predict(rf_model, newdata = kaggle.test)
+
+# Create a submission data frame with 'index' and 'Y' columns
+submission <- cbind(kaggle.test$index, kaggle.test.predictions)
+colnames(submission) <- c("index", "Y")
+
+# Generate a unique filename based on the current timestamp
+filename = paste("submission",format(Sys.time(), "%Y%m%d%H%M%S"),".csv", sep="")
+
+# Save the submission data frame to a CSV file
+write.csv(submission, filename, row.names = FALSE)
+```
+

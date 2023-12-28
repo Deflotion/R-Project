@@ -1,0 +1,96 @@
+---
+title: "terbaru 21.38 8 des"
+output: html_document
+date: "2023-11-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Data
+
+```{r}
+library(Metrics)
+library(ggplot2)
+library(randomForest)
+library(caret)
+```
+
+## Load Data 
+
+```{r}
+# Load the training dataset
+training <- read.csv("training.csv") 
+```
+
+ 
+## Basic Preprocessing
+
+```{r}
+# Filter numeric columns
+numeric_cols <- sapply(training, is.numeric)
+
+# Impute missing values with means for numeric columns
+for (col in names(training)[numeric_cols]) {
+  training[[col]][is.na(training[[col]])] <- mean(training[[col]], na.rm = TRUE)
+}
+
+# Impute missing values with mode for non-numeric columns
+for (col in names(training)[!numeric_cols]) {
+  mode_val <- names(sort(table(training[[col]]), decreasing = TRUE))[1] # Get mode
+  training[[col]][is.na(training[[col]])] <- mode_val
+}
+
+```
+
+# tidak perlu diubah
+```{r}
+# Split the data into training and testing sets
+set.seed(123)  # Set seed for reproducibility
+split_ratio <- 0.8  # 80% training, 20% testing
+num_rows <- nrow(training)
+train_indices <- sample(1:num_rows, size = round(split_ratio * num_rows))
+train_data <- training[train_indices, ]
+test_data <- training[-train_indices, ]
+
+```
+
+## Training and Evaluating Model
+
+```{r}
+# Feature Selection using Random Forest variable importance
+model <- randomForest(Y ~ ., data = train_data, ntree = 2000, mtry = 4)
+
+```
+
+```{r}
+# Make predictions on the test set
+predictions <- predict(model, newdata = test_data)
+
+# Evaluate the model
+rmse<- sqrt(mean((predictions - test_data$Y)^2))
+print(paste("Random Forest Root Mean Squared Error (Selected Features):", rmse))
+
+```
+
+## Kaggle Subsmission
+
+```{r}
+# Load the Kaggle testing dataset
+kaggle.test  <- read.csv("testing.csv") 
+
+# Make predictions on the Kaggle testing set
+kaggle.test.predictions <- predict(model, newdata = kaggle.test)
+
+# Create a submission data frame with 'index' and 'Y' columns
+submission <- cbind(kaggle.test$index, kaggle.test.predictions)
+colnames(submission) <- c("index", "Y")
+
+# Generate a unique filename based on the current timestamp
+filename = paste("submission",format(Sys.time(), "%Y%m%d%H%M%S"),".csv", sep="")
+
+# Save the submission data frame to a CSV file
+write.csv(submission, filename, row.names = FALSE)
+```
+ 

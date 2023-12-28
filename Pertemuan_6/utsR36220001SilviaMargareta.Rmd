@@ -1,0 +1,187 @@
+---
+title: "UTS R"
+nama : "Silvia Margareta"
+nim: "36220001"
+kelas: "3PDS1"
+output: html_document
+date: "2023-10-21"
+---
+
+```{r}
+## Memuat pustaka 'tidyverse' untuk analisis data.
+library(tidyverse)
+```
+
+### Nomor 1 DATA PREPROCESSING:
+
+Terdapat dataset yang kalian bisa download di link dibawah ini:
+
+LINK:tinyurl.com/UTSBAHASARUBM
+
+a)  Import data CSV tersebut kedalam project kalian, Ada berapa kolom dan data didalam dataset tersebut?
+
+```{r}
+# Mengimpor data CSV
+data <- read.csv("dataset_UTS_bahasaR.csv")
+
+# Menampilkan jumlah kolom dan baris
+jumlah_kolom <- ncol(data)
+jumlah_row<-nrow(data)
+paste("Jumlah kolom:", jumlah_kolom)
+paste("Jumlah Row:", jumlah_row)
+```
+
+b)  Buat dataframe baru dengan hanya mengambil kolom Judul (title), Durasi (runtime), Tanggal Rilis (release_date), Budget (budget), Pendapatan (revenue), Popularitas (popularity), dan Rating (vote_average) seperti tabel dibawah ini (dengan nama variabel datasetUTS)!
+
+```{r}
+# Membuat dataframe baru hanya dengan kolom yang diperlukan
+datasetUTS <- data %>%
+  select(title, runtime, release_date, budget, revenue, popularity, vote_average)
+
+# Menampilkan beberapa baris pertama dari dataframe baru
+datasetUTS
+```
+
+c)  Film dikatakan sukses jika memiliki kriteria jika proyek film tersebut memiliki budget dibawah rata-rata namun memiliki pendapatan tinggi, sebaliknya film yang gagal memiliki kriteria jika proyek film tersebut memiliki budget diatas rata-rata namun memiliki pendapatan rendah.Carilah 10 film yang sukses (dengan nama variabel top10success) dan 10 film yang gagal (dengan nama variabel top10failure) di tahun 2015.
+
+```{r}
+# Menghitung rata-rata budget
+rata_rata_budget <- datasetUTS%>%filter(year(ymd(release_date)) == 2015)%>%mutate(rata=mean(budget))
+
+# Membuat dataframe top10success (film sukses)
+top10success <- rata_rata_budget %>%
+  filter(budget < rata, revenue > rata)%>%arrange(desc(revenue)) %>%head(10)
+
+# Membuat dataframe top10failure (film gagal)
+top10failure <- rata_rata_budget %>%
+  filter(budget > rata, revenue < budget) %>%arrange(desc(budget))%>%
+  head(10)
+
+# Menampilkan dataframe top10success
+top10success
+
+# Menampilkan dataframe top10failure
+top10failure
+```
+
+d)  Dari dataset tersebut, terdapat film-film sequel, trilogi atau prequel dilihat dari judul film yang sama namun diikuti dengan angka seperti Avatar 1 dan Avatar 2 atau dengan "subtitle" berbeda seperti Harry Potter and The Goblet of Fire dan Harry Potter and The Prisoner of Azkaban.
+
+<!-- -->
+
+1.  Carilah 5 franchise film besar yang memiliki sequel, trilogi, atau prequel dengan total pendapat yang tertinggi! (dengan nama variable top5franchise)
+
+```{r}
+# Menggunakan fungsi gsub untuk mengambil dua kata pertama (tanpa angka) dari kolom "title" dan menyimpannya dalam kolom "franchise" di datasetUTS.
+datasetUTS$franchise <- gsub("^(\\w+\\s+\\w+).*", "\\1", datasetUTS$title)
+
+# Mengelompokkan data berdasarkan kolom "franchise" dan menghitung total pendapatan dan rata-rata rating.
+franchise_data <- datasetUTS %>%
+  group_by(franchise) %>%
+  summarise(Total_Revenue = sum(revenue),
+            Average_Rating = mean(vote_average))
+
+# Mengurutkan data berdasarkan total pendapatan dalam urutan menurun dan mengambil 5 data teratas.
+franchise_data <- franchise_data %>% arrange(desc(Total_Revenue)) %>% head(5)
+
+# Menampilkan data hasil pengelompokkan berdasarkan total pendapatan
+franchise_data
+
+```
+
+2.  Dari 5 franchise tersebut, manakah yang memiliki rata-rata rating tertinggi? (dengan nama variabel bestfranchise)
+
+```{r}
+# Mengurutkan data berdasarkan rata-rata rating dalam urutan menurun dan mengambil data dengan rating tertinggi.
+franchise_data_highest_rating <- franchise_data %>% arrange(desc(Average_Rating)) %>% head(1)
+
+#Menampilkan data hasil pengelompokkan berdasarkan data franchise dengan rating tertinggi.
+franchise_data_highest_rating
+```
+
+e)  Carilah insight lain yang dapat diambil dari dataset tersebut! Jelaskan dengan tag komen (\#)
+
+```{r}
+# Menghitung korelasi antara popularitas dan rating
+correlation <- cor(data$popularity, data$vote_average)
+
+# Membuat scatter plot untuk visualisasi hubungan
+ggplot(data, aes(x = popularity, y = vote_average, fill=popularity)) +
+  geom_point(shape = 21) +  # Menambahkan titik-titik pada scatter plot dan memberi warna
+  labs(x = "Popularitas", y = "Rating (Vote Average)") +  # Memberi label sumbu x dan y
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle(paste("Korelasi: ", round(correlation, 2))) +  # Menambahkan judul dengan nilai korelasi
+  theme_minimal()  # Menggunakan tema visual minimal
+
+# Kode tersebut menghasilkan scatter plot yang digunakan untuk visualisasi hubungan antara popularitas (popularity) dan rating film (vote_average). Scatter plot ini menunjukkan titik-titik data di mana sumbu x mewakili popularitas dan sumbu y mewakili rating. Pada plot ini, titik-titik data ditampilkan dalam warna biru, dan kita dapat mengamati pola hubungan antara popularitas dan rating. Jika terdapat korelasi yang kuat, kita mungkin melihat sebaran titik-titik yang membentuk pola linier.
+
+# Judul plot mencantumkan nilai korelasi yang telah dihitung sebelumnya, sehingga pemirsa dapat melihat sejauh mana hubungan ini bersifat positif atau negatif. Untuk menjaga kesederhanaan dan kejelasan plot, tema minimal digunakan.
+
+# Narasi: Dengan mengamati scatter plot dan mempertimbangkan nilai korelasi, kita dapat mengevaluasi seberapa besar pengaruh popularitas film terhadap rating. Jika terdapat korelasi positif yang kuat, ini bisa mengindikasikan bahwa film dengan popularitas tinggi cenderung mendapatkan rating yang lebih tinggi. Sebaliknya, jika terdapat korelasi negatif yang kuat, maka film-film dengan popularitas tinggi mungkin cenderung memiliki rating yang lebih rendah. Insight ini memberikan pemahaman yang berharga tentang bagaimana tingkat popularitas dapat memengaruhi penilaian penonton terhadap suatu film.
+```
+
+### Nomor 2 DATA VISUALIZATION
+
+a)  Buatlah Bar Chart untuk menunjukkan total pendapatan dari setiap tahun 2000-2015!
+
+```{r}
+# Filter data untuk tahun 2000-2015 (pastikan nama kolom tanggal rilis yang benar)
+data_filtered <- data %>%mutate(tahun=year(as.Date(release_date)))%>%
+  filter(tahun >= 2000, tahun <= 2015)
+
+# Menghitung total pendapatan per tahun
+total_pendapatan_per_tahun <- data_filtered %>%
+  group_by(tahun) %>%
+  summarize(total_pendapatan = sum(revenue))
+
+# Membuat Bar Chart
+ggplot(total_pendapatan_per_tahun, aes(x = factor(tahun), y = total_pendapatan,fill=total_pendapatan)) +
+  geom_bar(stat = "identity") + # Menambahkan elemen batang pada plot dan mengisi warna batang dengan kuning
+  scale_fill_gradient(low = "blue", high = "red")+
+  labs(x = "Tahun", y = "Total Pendapatan") + # Memberi label pada sumbu x (Tahun) dan sumbu y (Total Pendapatan)
+  ggtitle("Total Pendapatan per Tahun (2000-2015)") # Menambahkan judul plot
+  theme_minimal()  # Menggunakan tema visual minimal
+  
+```
+
+b)  Gunakan visualisasi untuk menunjukkan hubungan antara popularitas dan revenue Dan jabarkan dengan narasi dengan tag komen (\#)!
+
+```{r}
+# Membuat scatter plot untuk hubungan antara popularitas dan pendapatan
+  ggplot(datasetUTS) + # Memulai pembuatan plot dengan dataset "datasetUTS" menggunakan ggplot.
+  aes(x = popularity, y = revenue) + # Menggunakan "popularity" sebagai sumbu x dan "revenue" sebagai sumbu y.
+  labs(title="Hubungan Popularitas dan Revenue")+
+  geom_line(size = 1) + # Menggambar garis dengan warna hex "#112446".
+  scale_color_gradient(low = "blue", high = "red", aesthetics = "colour")+
+  theme_minimal()  # Mengatur tampilan plot ke mode minimal dengan tema "minimal".
+
+
+# Narasi:
+# Visualisasi ini bertujuan untuk mengeksplorasi keterkaitan antara popularitas (popularitas) dan pendapatan (revenue) dalam dataset. Dalam grafik ini, digunakan scatter plot, yang merupakan jenis grafik yang sesuai untuk menggambarkan hubungan antara dua variabel numerik.
+
+# Pada sumbu x (horisontal), terdapat popularitas, yang mungkin mencerminkan tingkat kepopuleran film, sedangkan pada sumbu y (vertikal), terdapat pendapatan, yang mengindikasikan total pendapatan yang dihasilkan oleh film-film tersebut.
+
+# Setiap titik pada grafik melambangkan satu set data film dalam dataset. Warna titik-titiknya disetel sebagai "#112446".
+
+# Dengan mengamati grafik ini, kita dapat mencari pola atau keterkaitan antara tingkat popularitas dan pendapatan film-film tersebut. Semakin tinggi posisi suatu titik pada grafik, semakin tinggi tingkat revenue film tersebut. Visualisasi ini dapat membantu kita dalam menilai apakah ada hubungan atau korelasi antara tingkat popularitas dan pendapatan film-film tersebut. Jika ada pola yang terlihat dengan jelas, hal ini dapat memberikan wawasan yang berharga dalam proses analisis data.
+```
+
+#### Coba coba
+```{r}
+# Filter data untuk tahun 2000-2015 (pastikan nama kolom tanggal rilis yang benar)
+data_filtered <- data %>%
+  filter(Tahun >= 2000, Tahun <= 2015)
+
+# Menghitung total pendapatan per tahun
+total_pendapatan_per_tahun <- data_filtered %>%
+  group_by(Tahun) %>% 
+  summarize(total_pendapatan = sum(Pendapatan))
+
+# Membuat Bar Chart dengan gradasi warna
+ggplot(data_filtered, aes(x = factor(Tahun), y = Pendapatan, fill = Pendapatan)) +
+  geom_bar(stat = "identity") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  labs(x = "Tahun", y = "Total Pendapatan") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```

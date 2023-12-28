@@ -1,0 +1,138 @@
+---
+title: "Central Limit Theorem"
+output: html_notebook
+source: https://rpubs.com/Precious_Amuja/1036179
+---
+
+Taken from: <https://rpubs.com/Precious_Amuja/1036179>
+
+Applying the Central Limit Theorem in R, The central limit theorem states that if the sample size is high enough, the sampling distribution of a sample mean is approximately normal, even if the population distribution is not.
+
+The sample distribution will also have the following properties, according to the central limit theorem:
+
+1.  The sample distribution's mean will be equal to the population distribution's mean. x = μ
+
+2.  The sampling distribution's standard deviation will be equal to the population distribution's standard deviation divided by the sample size.
+
+### Example: Applying the Central Limit Theorem in R
+
+The central limit theorem is demonstrated in R using the following example.
+
+Assume that the width of a turtle's shell is distributed uniformly, with a minimum width of 1.2 inches and a maximum width of 6 inches.
+
+That is, if we chose a turtle at random and measured the width of its shell, it could be anywhere between 1.2 and 6 inches wide.
+
+The following code demonstrates how to generate a dataset in R that contains the measurements of 1,000 turtle shell widths, uniformly dispersed between 1.2 and 6 inches.
+
+Let's make this example reproducible while using set.seed function.
+
+```{r}
+set.seed(123)
+```
+
+Let's make a uniformly distributed random variable with a sample size of 1000.
+
+```{r}
+data <- runif(n=1000, min=1.2, max=6)
+```
+
+Now we can visualize the distribution of turtle shell widths using a histogram.
+
+```{r}
+hist(data, col='steelblue', main='Histogram of Turtle Shell Widths')
+```
+
+```{r}
+mean(data)
+
+sd(data)
+```
+
+```{r}
+mean(sample(data, 100))
+
+```
+
+It's worth noting that the distribution of turtle shell widths isn't at all normally distributed.
+
+Now imagine that we choose 10 turtles from this population at random and measure the sample mean over and over again.
+
+The following code demonstrates how to do this in R and view the distribution of sample means with a histogram:
+
+To keep the sample means, create a blank vector.
+
+```{r}
+sample <- c()
+```
+
+take 1,000 random samples of size n=10
+
+```{r}
+n <- 100
+for (i in 1:n){
+  sample[i] = mean(sample(data, 5, replace=TRUE))
+}
+
+
+```
+
+```{r}
+sample
+```
+
+sample takes a random sample of specified size (10) from the provided data, with or without replacement.
+
+calculate the sample mean and standard deviation.
+
+```{r}
+mean(sample)
+
+sd(sample)
+```
+
+```{r}
+hist(sample, col ='red', xlab='Turtle Shell Width', main='Sample size = 30')
+```
+
+Even though the distribution from which the samples originated was not normally distributed, the sampling distribution of sample means seems to be regularly distributed.
+
+The sample mean and sample standard deviation for this sampling distribution are also worth noting.
+
+Now, let's say we increase the sample size from 10 to 50 and generate the sample means histogram.
+
+To hold the sample means, create a blank vector.
+
+```{r}
+sample50 <- c()
+```
+
+take 1,000 random samples of size n=50
+
+```{r}
+n = 1000
+for (i in 1:n){
+  sample50[i] = mean(sample(data, 50, replace=TRUE))
+}
+```
+
+To visualize the sampling distribution of sample means, make a histogram.
+
+```{r}
+hist(sample50, col ='steelblue', xlab='Turtle Shell Width', main='Sample size = 50')
+```
+
+```{r}
+mean(sample50)
+
+sd(sample50)
+```
+
+The sampling distribution is once again normal, the mean is nearly identical, and the sample standard deviation is even smaller.
+
+This is due to the fact that we employed a bigger sample size (n = 50) than in the previous case (n = 10), resulting in a lower standard deviation of sample means.
+
+We'll notice that as we use larger and larger sample sizes, the sample standard deviation gets lower and smaller.
+
+This is a practical example of the central limit theorem.
+
+As a result, the larger the sample size, the better. The sample size can be determined while taking care of adequate test power.

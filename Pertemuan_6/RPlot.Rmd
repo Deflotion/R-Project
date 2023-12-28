@@ -1,0 +1,44 @@
+---
+title: "R Plot"
+output: html_document
+date: "2023-10-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r cars}
+data <- cars
+summary(data)
+```
+```{r}
+max(data)
+
+```
+
+```{r}
+plot(x=data$dist, y=data$speed)
+
+```
+
+```{r}
+plot(data$dist, type = "l", col = "blue", lwd=4)
+
+```
+
+```{r}
+label <-c("Perempuan", "Laki-Laki")
+pie(c(60,40), labels = label)
+
+```
+
+
+```{r}
+negara <- c("Indonesia", "Malaysia", "Singapore", "Thailand")
+penduduk <- c(250, 60, 5, 80)
+barplot(penduduk, names.arg=negara, col = "green")
+
+```

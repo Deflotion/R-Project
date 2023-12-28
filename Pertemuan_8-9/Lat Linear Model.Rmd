@@ -1,0 +1,30 @@
+---
+title: "Belajar Linear Regresi"
+author: "Danny Revaldo"
+date: "2023-11-21"
+output: html_document
+---
+
+```{r}
+# data sample dalam bentu dummy
+set.seed(120)
+x <- rnorm(100)
+y <- 2*x+rnorm(100)
+```
+
+```{r}
+plot(x,y)
+```
+
+```{r}
+# buat OLS nya
+ols <- function(x,y){
+  n <- length(y)
+  
+  sum_x <- sum(x)
+  sum_y <- sum(y)
+  sum_xy <- sum(x*y)
+  sum_x_squared <- sum(x^2)
+  
+}
+```

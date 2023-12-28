@@ -1,0 +1,102 @@
+---
+title: "Latihan 5"
+output: html_document
+date: "2023-10-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## 1 & 2. Load and Select Data
+
+```{r}
+# load dataset
+power_plant<- read.csv("global_power_plant_database.csv")
+
+# select data
+power_plant <- power_plant %>% select(country, country_long, capacity_mw, primary_fuel, commissioning_year)
+
+# tampilkan 5 pertama
+head(power_plant, 5)
+```
+
+## 3. New Column Green Energy
+
+```{r}
+power_plant %>% select(primary_fuel) %>% distinct()
+```
+
+```{r}
+power_plant <- power_plant %>% mutate(is_green_energy=ifelse(primary_fuel %in% c("Wind", "Solar", "Hydro", "Geothermal", "Biomass", "Wave and Tidal"), 1, 0))
+
+head(power_plant)
+
+```
+
+## 4. Sumber Energi utama dunia
+
+```{r}
+power_plant %>% group_by(primary_fuel) %>% summarise(total=sum(capacity_mw, na.rm = T)) %>% arrange(desc(total)) %>% head(3)
+
+```
+
+## Sumber Energi utama di Indonesia
+
+```{r}
+power_plant %>% filter(country == "AFG") %>% group_by(primary_fuel) %>% summarise(total=sum(capacity_mw)) %>% arrange(desc(total)) %>% head(3)
+
+```
+
+## 5. Produksi Energi Listrik Terbesar/Terkecil di Dunia
+
+```{r}
+power_plant_by_country <- power_plant %>% group_by(country_long) %>% summarise(total=sum(capacity_mw))  
+
+
+# terbesar
+power_plant_by_country %>% arrange(desc(total)) %>% head(10)
+
+#terkecil 
+power_plant_by_country %>% arrange(total) %>% head(10)
+```
+
+```{r}
+power_plant_by_energy_type <- power_plant %>% group_by(country_long, is_green_energy) %>% summarise(total=sum(capacity_mw)) %>% arrange(desc(total)) 
+
+power_plant_by_energy_type %>% filter(is_green_energy == 1) %>% head(10)
+
+power_plant_by_energy_type %>% filter(is_green_energy == 0) %>% head(10)
+
+
+```
+
+## 7. Proporsi Energi
+
+```{r}
+# long to wide
+power_proportion <- power_plant_by_energy_type %>% pivot_wider(names_from = is_green_energy, values_from = total)
+
+# merubah nama kolom
+names(power_proportion) <- c( "country_long", "total_non_green_energy", "total_green_energy")
+
+# kolom proporsi
+
+power_proportion <- power_proportion %>% mutate(green_energy = total_green_energy / (total_green_energy+total_non_green_energy) * 100) %>% mutate(non_green_energy = total_non_green_energy / (total_green_energy+total_non_green_energy) * 100) 
+power_proportion %>% select(country_long, green_energy, non_green_energy)
+
+```
+
+### a. Proporsi produksi energi ramah lingkungan listrik Dunia
+
+```{r}
+mean(power_proportion$green_energy, na.rm=T) 
+
+```
+
+### b. 10 negara dengan proporsi produksi energi listrik ramah lingkungan terbesar Dunia
+
+```{r}
+power_proportion %>% arrange(desc(green_energy)) %>% select(country_long, green_energy) %>% head(10)
+```

@@ -1,0 +1,198 @@
+---
+title: "Latihan_soal 1"
+author: "Danny"
+date: "2023-10-07"
+output: html_document
+---
+
+1.  Tuliskan sebuah fungsi R yang menghasilkan deret bilangan ganjil dari 1 hingga N.
+
+    ```{r}
+    deret_bilangan <- function(n){
+      return(seq(1, n, by = 2))
+    }
+
+    deret_bilangan(11)
+    ```
+
+2.  Buatlah fungsi yang menerima input berupa panjang dan lebar sebuah persegi panjang, dan kemudian menghitung luas dan kelilingnya.
+
+    ```{r}
+    luas_persegi <- function(panjang,lebar){
+      return(panjang*lebar)
+    }
+
+    keliling_persegi<- function(panjang,lebar){
+      return(2*(panjang+lebar))
+    }
+
+    luas_persegi(10,19)
+    keliling_persegi(10,10)
+    ```
+
+3.  Buatlah sebuah fungsi untuk menghitung luas lingkaran (masukan berupa D atau diameter)
+
+    ```{r}
+    luas_lingkaran <- function(d){
+      r <- d/2
+      return(pi*r^2)
+    }
+    luas_lingkaran(9)
+    ```
+
+4.  Buatkan sebuah fungsi R yang memiliki input argument T. Fungsi ini diberi menghasilkan nilai true jika nilai T adalah sebuah teks palindrom. Kata palindrom adalah kata yang jika dibalik memiliki bunyi tetap. Contoh:
+
+-   KATAK dibalik jadi KATAK (TRUE)
+
+-   APEL dibalik menjadi LEPA (FALSE)
+
+    ```{r}
+    palingdrom <- function(kata){
+      splits <- strsplit(kata,"")[[1]] 
+      reversed <- rev(splits)
+      result <- paste(reversed, collapse = "")
+      tolower(result) == tolower(kata)
+    }
+
+    print(palingdrom("Sos"))
+    ```
+
+5.  Buatlah sebuah fungsi untuk membuat sebuah teks menjadi masked. Misal: David Beckham menjadi D\*\*\*\* B\*\*\*\*\*\*
+
+    ```{r}
+    mask <- function(nama){
+      splitted <- strsplit(nama, " ")[[1]]
+      jml_kata <- length(splitted)
+      result <- c(1:jml_kata)
+      for (i in 1:jml_kata) {
+        inisial <- substr(splitted[i],1,1)
+        result[i] <- paste(c(inisial,paste(rep("*", nchar(splitted[i])-1),collapse= "")),collapse="")
+      }
+      paste(result," ",collapse = "")
+    }
+
+    mask("Danny Beckham")
+    ```
+
+6.  Buat fungsi yang menerima sebuah kalimat sebagai input dan menghitung jumlah kata dalam kalimat tersebut.
+
+    ```{r}
+    jumlah_kata <- function(kata){
+      return(nchar(kata))
+    }
+    ```
+
+7.  Tuliskan fungsi R untuk mengonversi angka bulan menjadi nama bulan. Misalnya, jika inputnya adalah 1, hasilnya adalah "Januari"
+
+    ```{r}
+    konversi_bulan <- function(angka_bulan) {
+      nama_bulan <- c("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
+      return(nama_bulan[angka_bulan])
+    }
+
+    konversi_bulan(5)
+    ```
+
+8.  Tuliskan fungsi yang menentukan apakah sebuah bilangan adalah ganjil atau genap.
+
+    ```{r}
+    bilangan <- function(n){
+      if(n%%2==0){
+        print("Genap")
+      }else{
+        print("Ganjil")
+      }
+    }
+    ```
+
+9.  Buat sebuah fungsi yang menghitung selisih dua bilangan dengan hasil selisih selalui positif.
+
+    ```{r}
+    positif_bilangan <- function(a,b){
+      return(abs(a-b))
+    }
+    positif_bilangan(1,4)
+    ```
+
+10. Buat sebuah fungsi yang menghitung jumlah bilangan positif yang ada dalam sebuah vektor. Misal c(4,1,2,-2,-2) jumlahnya adalah 7
+
+    ```{r}
+    hitung_positif <- function(n){
+      return(length(n[n>0]))
+    }
+
+    hitung_positif(c(3,4,2,-8,-5,-1,-8,4,5,6,9))
+    ```
+
+11. Buat sebuah fungsi yang menerima inputan vector berisi nama, dan menghasilkan nama terpanjang dari vector tersebut.
+
+    ```{r}
+    nama_terpanjang <- function(nama) {
+      panjang_nama <- nchar(nama)  
+      indeks_terpanjang <- which.max(panjang_nama)  
+      return(nama[indeks_terpanjang])
+    }
+
+    nama_terpanjang(c("Alice", "Bob", "Charlie", "David", "Eva"))
+    ```
+
+12. Buat fungsi untuk menghitung huruf vocal (a,i,u,e,o) dalam sebuah teks.
+
+    ```{r}
+    hitung_vokal <- function(teks) {
+      vokal <- c("a", "i", "u", "e", "o")
+      jumlah_vokal <- sum(strsplit(teks, "")[[1]] %in% vokal)
+      return(jumlah_vokal)
+    }
+
+    hitung_vokal("Aku suka Bermain Mobel lejen bang bang")
+    ```
+
+13. Tuliskan fungsi bmi yang menghitung indeks massa tubuh (bmi = berat badan/tinggi badan\^2).
+
+    -   jika bmi \<= 18,5 "Kurang Berat"
+
+    -   jika bmi \<= 25.0 "Normal"
+
+    -   jika bmi \<= 30,0 "Kelebihan berat badan"
+
+    -   jika bmi \> 30 "Obesitas"
+
+    ```{r}
+    hitung_bmi <- function(berat, tinggi) {
+      bmi <- berat / (tinggi^2)
+
+      if(bmi <= 18.5){
+        print("Kurang Berat")
+      }else if(bmi <= 25){
+        print("Normal")
+      }else if(bmi <= 30){
+        print("Kelebihan berat badan")
+      }else{
+        print("Obesitas")
+      }
+    }
+
+    hitung_bmi(80, 1.5)
+    ```
+
+14. Tulis fungsi yang selalu menghasilkan 5 tapi dengan catatan bahwa kita tidak dapat menggunakan salah satu karakter berikut: 0123456789\*+-/ dalam kodingan kita.
+
+    ```{r}
+    hasil_lima <- function() {
+      hasil <- nchar("hello")
+      return(hasil)
+    }
+    hasil_lima()
+    ```
+
+15. Buatkan sebuah fungsi untuk mengetahui nama hari pada hari ke-N. (Note hari ke 1 adalah hari Minggu)
+
+    ```{r}
+    cari_hari <- function(hari){
+      nama_hari <- c("Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu")
+      
+      return(nama_hari[hari%%7])
+    }
+    cari_hari(100)
+    ```

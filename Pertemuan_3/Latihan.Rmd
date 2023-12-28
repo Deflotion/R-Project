@@ -1,0 +1,160 @@
+---
+title: "Latihan"
+output: html_document
+date: "2023-09-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Library
+
+```{r}
+library(dplyr)
+library(readxl)
+```
+
+## Load Data
+
+```{r}
+
+minimarket <- read.csv("Data_Alfamart Indomaret_South Jakarta.csv")
+penduduk <- read_excel("Jumlah Penduduk Menurut Kecamatan dan Jenis Kelamin di Kota Jakarta Selatan.xlsx")
+```
+
+## Glimpse Data
+
+```{r}
+glimpse(penduduk)
+
+```
+
+```{r}
+library(naniar)
+vis_miss(minimarket)
+```
+
+## Check Outlier
+
+```{r}
+minimarket %>% select(rating_tempat) %>% filter(rating_tempat > 5)
+```
+
+### Duplikasi Data
+
+```{r}
+minimarket %>% distinct()
+```
+
+### Check Missing Value
+
+```{r}
+# ini yang NA
+minimarket %>% filter(is.na(rating_tempat)) %>% select(nama_tempat, rating_tempat)
+
+```
+
+```{r}
+
+# ini yang NA
+minimarket %>% filter(rating_tempat==0 | is.na(rating_tempat)) %>% select(nama_tempat, rating_tempat)
+
+```
+
+### Inkonsistensi Data
+
+```{r}
+minimarket %>% select(nama_kecamatan) %>% distinct()
+```
+
+#### Koreksi Dataset
+
+```{r}
+minimarket_clean <- minimarket %>% 
+  distinct() %>% mutate(nama_kecamatan = ifelse(nama_kecamatan=="Pancorang", "Pancoran", nama_kecamatan)) %>% 
+  mutate(nama_kecamatan = ifelse(nama_kecamatan=="Pasar Mingu", "Pasar Minggu", nama_kecamatan)) %>%  
+  mutate(nama_kecamatan = ifelse(nama_kecamatan=="Kebayoran Lamma", "Kebayoran Lama", nama_kecamatan)) %>%  mutate(rating_tempat_fix=ifelse(rating_tempat>5, rating_tempat/10, rating_tempat)) 
+```
+
+```{r}
+minimarket_clean %>% select(nama_kecamatan) %>% distinct()
+```
+
+```{r}
+
+avg_rating <- minimarket_clean %>% select(rating_tempat_fix, store) %>% filter(store=="Indomaret")
+
+avg_rating_indomart <- round(mean(avg_rating$rating_tempat_fix, na.rm = TRUE), 2)
+
+avg_rating <- minimarket_clean %>% select(rating_tempat_fix, store) %>% filter(store=="Alfamart")
+
+avg_rating_alfamart <- round(mean(avg_rating$rating_tempat_fix, na.rm = TRUE), 2)
+
+# Imputasi Missing Value
+minimarket_clean2 <- minimarket_clean %>% mutate(rating_tempat_fix=ifelse(is.na(rating_tempat_fix) | rating_tempat_fix == 0 & store=="Indomaret", avg_rating_indomart, rating_tempat_fix))
+ 
+minimarket_clean2 <- minimarket_clean %>% mutate(rating_tempat_fix=ifelse(is.na(rating_tempat_fix) | rating_tempat_fix == 0 & store=="Alfamart", avg_rating_alfamart, rating_tempat_fix))
+```
+
+```{r}
+vis_miss(minimarket_clean2 %>% select(rating_tempat_fix))
+```
+
+```{r}
+names(penduduk) <- c("nama_kecamatan", "LakiLaki", "Perempuan")
+penduduk
+```
+
+```{r}
+# Memperbaiki dataset penduduk
+penduduk2 <- penduduk %>% 
+  filter(nama_kecamatan !="Tahun" & nama_kecamatan != "Kota Jakarta Selatan" ) %>% 
+  mutate(LakiLaki=as.numeric(LakiLaki)) %>% 
+  mutate(Perempuan=as.numeric(Perempuan)) %>% 
+  mutate(Total=LakiLaki+Perempuan)
+
+```
+
+```{r}
+penduduk2
+```
+
+## Analisis Data
+
+### 1. Rating Indomart VS Alfamart
+
+```{r}
+minimarket_clean2 %>% select(rating_tempat_fix, store, nama_kecamatan) %>% group_by(store) %>% summarise(store_avg_rate=mean(rating_tempat_fix))
+```
+
+### 2. Jumlah Toko Indomart VS Alfamart
+
+```{r}
+jumlah_toko<- minimarket_clean2 %>% select(store) %>% group_by(store) %>% count()
+jumlah_toko
+```
+
+### 3. Rasio Jumlah Minimarket dengan Jumlah Penduduk
+
+```{r}
+toko_indomart <- minimarket_clean2 %>% filter(store=="Indomaret") %>% select(store, nama_kecamatan) %>% group_by(nama_kecamatan) %>% count()
+
+toko_alfamart <- minimarket_clean2 %>% filter(store=="Alfamart") %>% select(store, nama_kecamatan) %>% group_by(nama_kecamatan) %>% count()
+toko_indomart
+```
+
+```{r}
+
+toko_all <- left_join(toko_alfamart, toko_indomart,"nama_kecamatan")
+
+names(toko_all) <- c("nama_kecamatan", "alfamart", "indomart")
+
+toko_all_with_penduduk <- left_join(toko_all, penduduk2, "nama_kecamatan")
+
+toko_all_with_penduduk2 <- toko_all_with_penduduk %>% 
+  mutate(ratio_alfamart=Total/alfamart) %>%
+  mutate(ratio_indomaret=Total/indomart)
+
+toko_all_with_penduduk2
+```

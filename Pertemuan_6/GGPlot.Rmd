@@ -1,0 +1,64 @@
+---
+title: "GG Plot"
+output: html_document
+date: "2023-10-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+dataset <- mpg
+summary(mpg)
+```
+
+```{r}
+ggplot(dataset, aes(x = cty, y = hwy)) + geom_point(color="blue") + labs(x="Capacity", y="Highway")
+
+```
+
+```{r}
+c <- ggplot(mpg, aes(hwy)) + geom_histogram(binwidth = 5) 
+c
+```
+
+```{r}
+ggplot(mpg, aes(class, hwy, fill=class)) + geom_col() + theme_minimal() 
+```
+
+```{r}
+ggplot(mpg %>% filter(manufacturer!="audi"), aes(x = manufacturer, y = cty, fill=manufacturer)) + geom_bar(stat = "summary", fun = "max") + labs(y="Rata-Rata Cty", x="Manufacturer")
+
+```
+
+```{r}
+ggplot(dataset) +
+  aes(x = class, fill = class) +
+  geom_bar() +
+  scale_fill_manual(
+    values = c(`2seater` = "#000004",
+    compact = "#330C56",
+    midsize = "#781C6D",
+    minivan = "#BA3853",
+    pickup = "#ED6925",
+    subcompact = "#F9B420",
+    suv = "#FCFFA4")
+  ) +
+  theme_classic()
+
+```
+
+```{r}
+ggplot(dataset) +
+  aes(x = hwy, y = cty, colour = manufacturer, size = cyl) +
+  geom_point(shape = "circle") +
+  scale_color_hue(direction = 1) +
+  theme_minimal() + labs(title="Ini Adalah Judul", x="Highway", y="Capacity")
+```

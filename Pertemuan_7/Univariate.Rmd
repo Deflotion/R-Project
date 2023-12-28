@@ -1,0 +1,121 @@
+---
+title: "Univariate Analysis"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-11-10"
+---
+
+### Load Data
+
+```{r}
+movies <- read.csv("dataset_UTS_bahasaR.csv")
+
+```
+
+## Categoric Variable
+
+```{r}
+length(movies$id)
+```
+
+```{r}
+library(dplyr)
+
+movies %>% group_by(original_language) %>% count() %>% arrange(desc(n)) %>% mutate(percent = n / length(movies$id) * 100)
+
+```
+
+```{r}
+table(movies$original_language)
+
+```
+
+```{r}
+prop.table(table(movies$original_language))
+```
+
+```{r}
+ggplot(movies) +
+  aes(x = original_language) +
+  geom_bar(fill = "#112446") +
+  theme_minimal()
+```
+
+## Numerical Variable
+
+```{r}
+# mean, min, max
+mean(movies$vote_average)
+min(movies$vote_average)
+max(movies$vote_average)
+
+summary(movies$vote_average)
+
+get_mode <- function(v) {
+  unique_value <- unique(v)  
+  unique_value[which.max(tabulate(match(v, unique_value)))]
+}
+
+get_mode(movies$vote_average)
+```
+
+```{r}
+print(mean(movies$vote_average))
+print(sd(movies$vote_average))
+```
+
+```{r}
+hist(movies$vote_average)
+
+```
+
+```{r}
+library(e1071)
+x <- rnorm(100)
+skewness(x)
+```
+
+```{r}
+library(pastecs)
+
+stat.desc(movies$vote_average, norm = T)
+```
+```{r}
+x <- rnorm(5000, 6, 1)
+hist(x)
+```
+
+
+```{r}
+stat.desc(x, norm = T)
+```
+
+
+```{r}
+x_sample <- sample(x, 500)
+x_sample
+```
+
+```{r} 
+stat.desc(x, norm = T)
+```
+```{r}
+stat.desc(x_sample, norm = T)
+```
+
+```{r}
+library(corrplot)
+
+M <- cor(movies %>% select(popularity, vote_average, revenue, budget))
+M
+```
+
+```{r}
+corrplot(M, method="color")
+
+```
+```{r}
+dataku <- cars
+
+```

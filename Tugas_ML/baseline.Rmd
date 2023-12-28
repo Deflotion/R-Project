@@ -1,0 +1,116 @@
+## Load Data
+
+```{r}
+library(ggplot2)
+library(randomForest)
+library(Metrics)
+```
+
+## Load Data 
+
+```{r}
+# Load the training dataset
+training <- read.csv("training.csv")
+```
+
+ 
+## Basic Preprocessing
+
+```{r}
+# Basic Preprocessing: Remove rows with missing values
+# training <- na.omit(training)
+
+# Menghapus baris dengan nilai string kosong pada kolom 'area'
+# training <- training[training$area != "", ]
+
+# Menghapus baris dengan nilai string kosong pada kolom 'market'
+# training <- training[training$market != "", ]
+
+
+# Fill missing or empty values in the 'area' column with "area [angka]" from the range 0-9
+missing_area_indices <- which(training$area == "")
+training$area[missing_area_indices] <- paste0("area ", sample(0:9, length(missing_area_indices), replace = TRUE))
+
+# Fill missing or empty values in the 'market' column with random 'L' or 'K'
+missing_market_indices <- which(training$market == "")
+training$market[missing_market_indices] <- sample(c("L", "K"), length(missing_market_indices), replace = TRUE)
+
+numeric_cols <- sapply(training, is.numeric)
+numeric_df <- training[, numeric_cols]
+
+means <- colMeans(numeric_df, na.rm = TRUE)
+
+for (col in colnames(numeric_df)) {
+  numeric_df[is.na(numeric_df[col]), col] <- means[col]
+}
+
+training[, numeric_cols] <- numeric_df
+```
+
+
+```{r}
+# Split the data into training and testing sets
+# set.seed(12345)  # Set seed for reproducibility
+#split_ratio <- 0.9  # 80% training, 20% testing
+#num_rows <- nrow(training)
+#train_indices <- sample(1:num_rows, size = round(split_ratio * num_rows))
+#train_data <- training[train_indices, ]
+#test_data <- training[-train_indices, ]
+
+set.seed(12345)  # Set seed for reproducibility
+split_ratio_train <- 0.8 # 60% training
+split_ratio_test <- 0.1   # 20% testing
+split_ratio_validation <- 0.1  # 20% validation
+
+num_rows <- nrow(training)
+
+# Bagian untuk data pelatihan
+train_indices <- sample(1:num_rows, size = round(split_ratio_train * num_rows))
+train_data <- training[train_indices, ]
+
+# Bagian untuk data pengujian
+remaining_indices <- setdiff(1:num_rows, train_indices)
+test_indices <- sample(remaining_indices, size = round(split_ratio_test * num_rows))
+test_data <- training[test_indices, ]
+
+# Bagian untuk data validasi
+validation_indices <- setdiff(remaining_indices, test_indices)
+validation_data <- training[validation_indices, ]
+```
+
+## Training and Evaluating Model
+
+```{r}
+# Training the linear regression model using all predictors (Y ~ .)
+rf_model <- randomForest(Y ~ ., data = train_data, ntree=10000)
+
+# Make predictions on the test set
+predictions_test <- predict(rf_model, newdata = test_data)
+predictions_validation <- predict(rf_model, newdata = validation_data)
+# Evaluate the model using Mean Squared Error (MSE)
+rmse <- sqrt(mean((predictions_test - test_data$Y)^2))
+rmse2 <- sqrt(mean((predictions_validation - test_data$Y)^2))
+print(paste("Mean Squared Error testing:", rmse))
+print(paste("Mean Squared Error validation:", rmse2))
+```
+
+## Kaggle Subsmission
+
+```{r}
+# Load the Kaggle testing dataset
+kaggle.test  <- read.csv("testing.csv") 
+
+# Make predictions on the Kaggle testing set
+kaggle.test.predictions <- predict(rf_model, newdata = kaggle.test)
+
+# Create a submission data frame with 'index' and 'Y' columns
+submission <- cbind(kaggle.test$index, kaggle.test.predictions)
+colnames(submission) <- c("index", "Y")
+
+# Generate a unique filename based on the current timestamp
+filename = paste("submission",format(Sys.time(), "%Y%m%d%H%M%S"),".csv", sep="")
+
+# Save the submission data frame to a CSV file
+write.csv(submission, filename, row.names = FALSE)
+```
+ 

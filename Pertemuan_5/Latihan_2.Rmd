@@ -1,0 +1,106 @@
+---
+title: "Latihan 2"
+author: "Danny"
+date: "2023-10-15"
+output: html_document
+---
+
+1.  Load dataset global_power_plant_database.csv dan simpan dalam sebuah Data Frame. Dataset ini berisi data pembangkit listrik yang ada di seluruh dunia.
+
+    ```{r}
+    library(tidyverse)
+    df <- read.csv("global_power_plant_database.csv")
+    ```
+
+2.  Dalam dataset tersebut gunakan hanya kolom yang diperlukan untuk analisis yakni:
+
+-   country
+
+-   country_long
+
+-   capacity_mw
+
+-   primary_fuel
+
+-   commissioning_year Untuk itu, sederhanakan dataset dengan hanya memilih kolom di atas.
+
+    ```{r}
+    df <- df%>%select(country,country_long,capacity_mw,primary_fuel,commissioning_year)
+    head(df)
+    ```
+
+3.  Buatlah sebuah kolom baru dengan nama is_green_energy. Isi kolom tersebut dengan angka 1 untuk menandakan bahwa pembangkit listrik adalah pembangkit ramah lingkungan yakni jika primary_fuel masing-masing pembangkit adalah Wind, Solar, Hydro, Geothermal, Biomass, Wave and Tidal.
+
+    ```{r}
+    df <- df%>%mutate(is_green_energy=ifelse(primary_fuel %in% c("Wind", "Solar", "Hydro", "Geothermal", "Biomass", "Wave and Tidal"),1,0))
+    head(df)
+    ```
+
+4.  Carilah 3 jenis bahan bakar utama (primary_fuel) yang menjadi sumber energi listrik paling besar di seluruh dunia. Cari tahu juga 3 jenis bahan bakar utama yang digunakan di Indonesia. Hint: Lakukan grouping berdasarkan kolom primary_fuel dan hitung total produksi listrik (capacity_mw) untuk masing-masing bahan bakar lalu urutkan.
+
+    ```{r}
+    df%>%group_by(primary_fuel)%>%summarise(total=sum(capacity_mw),na.rm=T)
+    ```
+
+5.  Lakukan grouping per negara dan hitunglah total kapasitas pembangkit yang ada di masing-masing negara dengan menjumlahkan nilai capacity_mw. Setelah itu carilah:
+
+<!-- -->
+
+a.  10 Negara dengan kapasitas pembangkit listrik terbesar di dunia.
+
+b.  10 Negara dengan kapasitas pembangkit listrik terkecil di dunia.
+
+    ```{r}
+    kapasitas_listrik <- df%>%select(country_long,capacity_mw)%>%group_by(country_long)%>%summarise(total=sum(capacity_mw))
+
+    kapasitas_listrik%>%arrange(total)%>%head(10)
+    kapasitas_listrik%>%arrange(desc(total))%>%head(10)
+    ```
+
+<!-- -->
+
+6.  Lakukan grouping berdasarkan kolom country dan is_green_energy dan hitunglah total kapasitas pembangkit untuk (total_energy_capacity) dengan menjumlahkan nilai capacity_mw. Setelah itu carilah:
+
+<!-- -->
+
+a.  10 Negara yang memproduksi listrik ramah lingkungan terbesar di dunia.
+
+b.  10 Negara yang memproduksi listrik paling tidak ramah lingkungan terbesar di dunia.
+
+    ```{r}
+    tipe_energi_listrik <- df%>%group_by(country_long, is_green_energy) %>% summarise(total=sum(capacity_mw)) %>% arrange(desc(total))
+
+    tipe_energi_listrik%>%filter(is_green_energy==1)%>%head(10)
+    tipe_energi_listrik%>%filter(is_green_energy!=1)%>%head(10)
+    ```
+
+<!-- -->
+
+7.  Berdasarkan DataFrame yang dibuat pada nomor 6, buatlah sebuah dataframe baru yang merangkum proporsi listrik yang ramah lingkungan dan tidak ramah lingkungan sehingga berbentuk seperti contoh berikut: country country_long green_energy non_green_energy AFG Afghanistan... 20% 80% ... ... ... ...
+
+    ```{r}
+    # long to wide
+    power_proportion <- tipe_energi_listrik %>% pivot_wider(names_from = is_green_energy, values_from = total)
+
+    # merubah nama kolom
+    names(power_proportion) <- c( "country_long", "total_non_green_energy", "total_green_energy")
+
+    # kolom proporsi
+
+    power_proportion <- power_proportion %>% mutate(green_energy = total_green_energy / (total_green_energy+total_non_green_energy) * 100) %>% mutate(non_green_energy = total_non_green_energy / (total_green_energy+total_non_green_energy) * 100) 
+    power_proportion %>% select(country_long, green_energy, non_green_energy)
+    ```
+
+8.  Berdasarkan hasil dari angka 7 diatas, carilah:
+
+    a\. Rata-rata proporsi produksi energi listrik ramah lingkungan oleh setiap negara
+
+    b\. 10 negara dengan proporsi produksi energi listrik ramah lingkungan terbesar.
+
+    ```{r}
+    mean(power_proportion$green_energy, na.rm=T)
+    ```
+
+```{r}
+power_proportion %>% arrange(desc(green_energy)) %>% select(country_long, green_energy) %>% head(10)
+```

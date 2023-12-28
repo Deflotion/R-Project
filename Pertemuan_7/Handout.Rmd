@@ -1,0 +1,94 @@
+---
+title: "Classical Stastical Analysis"
+output: html_document
+date: "2023-11-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+library(dplyr)
+library(ggplot2)
+
+movies %>%
+ filter(revenue >= 0L & revenue <= 1844156586L) %>%
+ ggplot() +
+ aes(x = budget, y = revenue, size = popularity) +
+ geom_point(shape = "circle", colour = "#112446") +
+ geom_smooth(span = 1L) +
+ theme_gray()
+## Data Analytics Level
+
+![](https://s3.amazonaws.com/libapps/accounts/66329/images/Analytics_Chart.jpg)
+
+## Data Science
+
+![](https://www.saedsayad.com/images/DataMiningMap_salar.png)
+
+## Exploratory Data Analysis
+
+### Unvariate Analysis
+
+Univariate mengacu pada analisis satu variabel atau satu karakteristik dari kumpulan data. Dalam analisis statistik, analisis univariat melibatkan pemeriksaan distribusi satu variabel.
+
+Sebagai contoh, jika Anda sedang menganalisis kumpulan data skor ujian siswa, Anda dapat melakukan analisis univariat terhadap skor matematika untuk menentukan rata-rata, median, dan modus skor, serta statistik deskriptif lainnya. Ini merupakan contoh analisis univariat karena Anda\
+hanya melihat satu variabel (skor matematika) dan tidak mempertimbangkan faktor lain seperti usia siswa, jenis kelamin, atau skor ujian lainnya.
+
+### Teknik yang digunakan:
+
+##### Categorical Variable
+
+1.  Statistik
+    -   Frequency (Count), Proportion, Mode, Marginality
+2.  Visualisasi
+    -   Pie Chart, Bar Chart
+
+##### Numerical Variable
+
+1.  Statistik
+    -   Central Tendency (mean, median, min, max, range)
+
+    -   Variability (std, var)
+
+    -   Shape (skewness, kurtosis)
+2.  Visualisasi
+    -   Histogram
+
+    -   Box Plot
+
+    -   Violion Plot
+
+### Multivariate Analysis
+
+Multivariat merujuk pada analisis beberapa variabel atau karakteristik dalam satu set data secara bersamaan. Dalam analisis statistik, analisis multivariat melibatkan pemeriksaan hubungan antara beberapa variabel dalam satu set data dan bagaimana mereka saling mempengaruhi.
+
+##### Numerical - Numerical
+
+1.  Statistik
+    -   Correlation
+2.  Visualisasi
+    -   Scatter Plot
+
+##### Categorical - Categorical
+
+1.  Statistik
+    -   Chi-Square Test
+2.  Visualisasi
+    -   Stacked Bar Chart
+
+    -   Combination Chart (Line+Bar Chart)
+
+##### Categorical - Numerical
+
+1.  Statistik
+    -   Z-test
+
+    -   t-test
+
+    -   ANOVA
+2.  Visualisasi
+    -   Stacked Bar Chart
+
+    -   Combination Chart (Line+Bar Chart)

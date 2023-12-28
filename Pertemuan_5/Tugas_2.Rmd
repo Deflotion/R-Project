@@ -1,0 +1,323 @@
+---
+title: "Tugas 2"
+author: "Danny Revaldo dan Silvia Margareta"
+date: "2023-10-17"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+library(tidyverse)
+```
+
+## A. BAGIAN I (20%)
+
+1.  Carilah 10 pembangkit listrik tertua dunia berdasarkan kolom
+    commissioning_year, lakukan koreksi terlebih dahulu data pada kolom
+    commissioning_year dan abaikan jika datanya kosong. Cari tahu juga
+    pembangkit listrik tertua di Indonesia.
+
+    ```{r}
+    df_global_plant <- read.csv("global_power_plant_database.csv")
+    df_populasi <- read.csv("world_population_data.csv")
+    ```
+
+    ```{r}
+    df_global_plant <- df_global_plant%>% filter(!is.na(commissioning_year))%>%group_by(country_long,name,commissioning_year) %>% arrange(commissioning_year)
+
+    df_global_plant%>%select(country_long,name,commissioning_year)%>%head(10)
+
+    # Menampilkan pembangkit listrik tertua di Indonesia
+    df_global_plant%>%filter(country_long == "Indonesia") %>% head(1)
+    ```
+
+2.  Lakukan grouping per negara dan hitung rata-rata usia pembangkit
+    listrik yang dimiliki berdasarkan kolom commissioning_year. Setelah
+    itu carilah 10 negara dengan rata-rata usia pembangkit listrik
+    termuda.
+
+    ```{r}
+    df_global_plant <- df_global_plant%>%mutate(usia=2023-commissioning_year)
+
+    ratausia<- df_global_plant%>%group_by(country_long)%>%summarise(rata_usia = mean(usia, na.rm = T))
+
+    ratausia%>%arrange(rata_usia)%>%head(10)
+    ratausia%>%arrange(desc(rata_usia))%>%head(10)
+    ```
+
+3.  Berdasarkan kolom commissioning_year buatlah sebuah kolom baru
+    dengan nama new_powerplant yang isinya TRUE jika kolom nilai
+    commissioning_year \> 2015 dan FALSE jika \<= 2015. Setelah itu,
+    carilah insight berikut:
+
+    ```{r}
+    power_plant_baru <- df_global_plant%>%mutate(new_powerplant=commissioning_year>2015)
+    ```
+
+    a.  Di seluruh dunia lebih besar mana kapasitas yang diproduksi oleh
+        pembangkit listrik baru atau pembangkit listrik lama.
+
+    ```{r}
+    power_plant_baru <- power_plant_baru%>%filter(!is.na(new_powerplant))%>%group_by(country,country_long,new_powerplant)%>%summarise(total=sum(capacity_mw,na.rm=T))
+
+    head(power_plant_baru,10)
+    ```
+
+    b.  Di Indonesia lebih besar mana kapasitas yang diproduksi oleh
+        pembangkit listrik baru atau pembangkit listrik lama.
+
+    ```{r}
+    power_plant_baru%>%filter(country_long=="Indonesia")
+    ```
+
+4.  Berdasarkan DataFrame yang dibuat pada soal nomor 3, buatlah sebuah
+    dataframe baru yang merangkum proporsi listrik yang dibuat oleh
+    pembangkit listrik baru dan lama sehingga berbentuk seperti contoh
+    berikut: country country_long old_power_plant new_power_plant AFG
+    Afghanistan... 20% 80% ... ... ... ...
+
+    ```{r}
+    proporsi_listrik <- power_plant_baru%>% pivot_wider(names_from = new_powerplant, values_from = total)
+
+    names(proporsi_listrik)<- c("country_code","country_long","total_old_power_plant","total_new_power_plant")
+
+    proporsi_listrik <- proporsi_listrik %>% mutate(old_power_plant = total_old_power_plant / (total_old_power_plant+total_new_power_plant) * 100) %>% mutate(new_power_plant = total_new_power_plant / (total_old_power_plant+total_new_power_plant) * 100) 
+
+    proporsi_listrik %>% select(country_long, old_power_plant, new_power_plant)%>%filter(!is.na(old_power_plant&new_power_plant))%>%arrange()
+    ```
+
+5.  Berdasarkan hasil dari langkah 4 diatas, carilah 10 negara yang
+    energi listriknya sebagian besar masih diproduksi oleh pembagkit
+    listrik lama (old_power_plant).
+
+    ```{r}
+    proporsi_listrik%>%select(country_long,old_power_plant,new_power_plant)%>%group_by(country_long,old_power_plant,new_power_plant)%>%arrange(desc(old_power_plant))%>%head(10)
+      
+    ```
+
+## B. BAGIAN II (30%)
+
+1.  Load dataset word_population_data.csv sebagai DataFrame. Untuk
+    analisis, pada dataset yang telah diload ini gunakan hanya kolom
+    berikut: - country_code - 2020 (ganti nama kolom 2022 menjadi
+    population_2022) - 2030 (ganti nama kolom 2030 menjadi
+    population_2030)
+
+    ```{r}
+    populasi_dunia <- df_populasi%>%select(country,country_code,X2022,X2030)
+
+    names(populasi_dunia) = c("country","country_code","population_2022","population_2030")
+
+    populasi_dunia
+    ```
+
+2.  Menggunakan hasil operasi grouping dan aggregasi untuk menghitung
+    energy per negara seperti pada soal latihan langkah 6, lakukan join
+    dengan dataframe populasi pada Langkah 11 sehingga menghasilkan
+    DataFrame berikut: country_code population_2020 population_2030
+    total_energy_capacity AFG XX XX XX .. ... ... ...
+
+    ```{r}
+    rasio_energy_population <- populasi_dunia%>%select(country_code,population_2022,population_2030)
+
+    merge_rasio_energy_population <- inner_join(populasi_dunia,proporsi_listrik,by="country_code")
+
+    cek_penggunaan <- merge_rasio_energy_population%>%mutate(total_energy_capacity=total_old_power_plant+total_new_power_plant)
+
+    cek_penggunaan <- cek_penggunaan%>%select(country_code,population_2022,population_2030,total_energy_capacity)
+    cek_penggunaan
+    ```
+
+3.  Asumsikan bahwa dari kapasitas produksi listrik suatu negara
+    (total_energy_capacity), energy yang benar-benar dikonsumsi oleh
+    negara tersebut pada tahun 2022 adalah 90%. Untuk itu buatlah sebuah
+    kolom baru yakni total_energy_consumption_2022 yang nilainya
+    dihitung dari 90% x total_energy_capacity.
+
+    ```{r}
+    capacity_power <- cek_penggunaan%>%mutate(total_energy_consumption_2022=total_energy_capacity*0.9)
+    capacity_power
+    ```
+
+4.  Buat sebuah kolom baru dengan nama energy_consumption_per_capita per
+    negara yang merupakan hasil dari
+    total_energy_consumption_2022/population_2022. Kolom ini menunjukan
+    tingkat konsumsi energi listrik per kapita di suatu negara. Setelah
+    itu carilah:
+
+    ```{r}
+    capita_cost <- capacity_power%>%mutate(energy_consumption_per_capita=total_energy_consumption_2022/population_2022)
+
+    capita_cost
+    ```
+
+    a.  Rata-rata konsumsi listrik per kapita di seluruh dunia.
+
+    ```{r}
+    mean(capita_cost$energy_consumption_per_capita,na.rm = T)
+    ```
+
+    b.  10 negara dengan konsumsi listrik per kapita terbesar pada tahun
+        2022
+
+    ```{r}
+    consume_per_capita <- capita_cost%>%select(country_code,population_2022,energy_consumption_per_capita)%>%group_by(country_code)
+
+    consume_per_capita%>%arrange(desc(energy_consumption_per_capita))%>%head(10)
+    ```
+
+    c.  10 negara dengan konsumsi listrik per kapita terkecil pada tahun
+        2022
+
+    ```{r}
+    consume_per_capita%>%arrange(energy_consumption_per_capita)%>%head(10)
+    ```
+
+5.  Buat kolom baru untuk proyeksi kebutuhan energi listrik pada tahun
+    2030 untuk masing- masing negara dengan nama
+    total_energy_consumption_2030. Nilai kolom ini dihitung dari
+    population_2030 x energy_consumption_per_capita. Tampilkan proyeksi
+    kebutuhan energi listrik pada 2030 untuk negara-negara ASEAN.
+
+    ```{r}
+    energi_diperlukan_2030 <- capita_cost%>%select(country_code,population_2030,energy_consumption_per_capita)%>%group_by(country_code)
+
+    energi_diperlukan_2030 <- energi_diperlukan_2030%>%mutate( total_energy_consumption_2030 = population_2030*energy_consumption_per_capita)
+
+    energi_diperlukan_2030%>%filter(country_code %in% c("IDN", "MYS", "PHL", "SGP", "THA", "BRN", "VNM", "MMR", "KHM", "LAO"))%>%head()
+    ```
+
+## C. BAGIAN III (50%)
+
+Berdasarkan dua dataset yang diberikan (world_population_data dan
+global_power_plant_database). Lakukanlah analisis secara kreatif untuk
+mendapatkan 5 insight lain selain yang telah disebutkan pada saat
+Latihan dan Bagian III.
+
+Anda dibebaskan untuk menggunakan kolom diluar yang digunakan pada saat
+latihan dan Bagian I dan II. Anda juga diperbolehkan untuk menambahkan
+dataset lain selain 2 dataset tersebut.
+
+1.  Mencari penggunaan listrik pada tahun 2050 dan diindonesia berapa
+
+```{r}
+populasi_2050 <- df_populasi%>%select(country_code,X2050)
+
+names(populasi_2050) = c("country_code","population_2050")
+
+populasi_2050 <- left_join(populasi_2050,consume_per_capita,"country_code")
+
+populasi_2050 <- populasi_2050%>%select(country_code,population_2050,energy_consumption_per_capita)
+
+energi_populasi_2050 <- populasi_2050%>%mutate(total_energy_for_2050=population_2050*energy_consumption_per_capita)
+
+energi_populasi_2050%>%arrange(desc(total_energy_for_2050))%>%head(10)
+
+energi_populasi_2050%>%filter(country_code=="IDN")%>%head()
+```
+
+Bisa disimpulkan bahwa total energi yang dibutuhkan Indonesia pada tahun
+2050 adalah 6917.318
+
+2.  Perbandingan penggunaan listrik pada tahun 2030 dan 2050
+
+    ```{r}
+    listrik_2030_2050 <- inner_join(energi_diperlukan_2030,energi_populasi_2050,by="country_code")
+
+    listrik_2030_2050 <- listrik_2030_2050%>%select(country_code,total_energy_consumption_2030,total_energy_for_2050)
+
+    names(listrik_2030_2050) <- c("country_code","total_energy_2030","total_energy_2050")
+
+    total_energy_2030 <- sum(listrik_2030_2050$total_energy_2030,na.rm = T)
+
+    total_energy_2050 <- sum(listrik_2030_2050$total_energy_2050,na.rm = T)
+
+
+    total_energy_summary <- data.frame(
+      Year = c("2030", "2050"),
+      Total_Energy = c(total_energy_2030, total_energy_2050)
+    )
+
+    total_energy_summary
+    ```
+
+    Bisa disimpulkan bahwa total energi pada 2050 akan lebih besar
+    daripada 2030
+
+3.  Total kenaikan penduduk dari 2022 sampai 2030 dan dipilih yang
+    kenaikan dan yang menurun
+
+    ```{r}
+    total_kenaikan_2022_2030 <- capacity_power%>%select(country_code,population_2022,population_2030)
+
+    total_kenaikan_2022_2030 <- total_kenaikan_2022_2030%>%mutate(presentase_kenaikan = (population_2030-population_2022)/population_2022*100)
+
+    total_kenaikan_2022_2030 <- left_join(df_populasi,total_kenaikan_2022_2030,by="country_code")
+
+    total_kenaikan_2022_2030 <- total_kenaikan_2022_2030%>%select(country,country_code,population_2022,population_2030,presentase_kenaikan)
+
+    total_kenaikan_2022_2030%>%arrange(presentase_kenaikan)%>%head(10)
+    total_kenaikan_2022_2030%>%arrange(desc(presentase_kenaikan))%>%head(10)
+
+    ```
+
+    Bisa disimpulkan bahwa negara lebanon mengalami penurunan penduduk
+    sebesar 14% dikarenakan perang dinegaranya dan DR Congo negara yang
+    total kenaikan penduduk terbesar yaitu 28%
+
+4.  Total kenaikan penduduk dari 2030 sampai 2050 dan dipilih yang naik
+    dan yang menurun
+
+```{r}
+total_kenaikan_2030_2050 <- inner_join(energi_diperlukan_2030,energi_populasi_2050,by="country_code")
+
+    total_kenaikan_2030_2050 <- total_kenaikan_2030_2050%>%select(country_code,population_2030,population_2050)
+
+    total_kenaikan_2030_2050 <- total_kenaikan_2030_2050%>%mutate(presentase_kenaikan = (population_2050-population_2030)/population_2030*100)
+
+    total_kenaikan_2030_2050 <- left_join(df_populasi,total_kenaikan_2030_2050,by="country_code")
+
+    total_kenaikan_2030_2050 <- total_kenaikan_2030_2050%>%select(country,country_code,population_2030,population_2050,presentase_kenaikan)
+
+    total_kenaikan_2030_2050%>%group_by(country)%>%arrange(presentase_kenaikan)%>%head(10)
+    total_kenaikan_2030_2050%>%group_by(country)%>%arrange(desc(presentase_kenaikan))%>%head(10)
+    
+```
+
+Bisa disimpulkan bahwa diatas tahun 2030 lebanon tidak masuk ke dalam
+kategori penurunan penduduk tetapi digantikan oleh
+Bulgaria,Ukraine,Japan,dll. Untuk negara DR Congo mengalami kenaikan
+yang signifikan yaitu 70%
+
+5.  Membandingkan total kenaikan penduduk antara 2022-2030 dengan
+    2030-2050
+
+```{r}
+perbandingan_penduduk <- inner_join(total_kenaikan_2022_2030,total_kenaikan_2030_2050,by="country_code")
+
+perbandingan_penduduk <- perbandingan_penduduk%>%select(country_code,country.x,population_2022,population_2030.x,population_2050,presentase_kenaikan.x,presentase_kenaikan.y)
+
+names(perbandingan_penduduk) <- c("country_code","country","population_2022","population_2030","population_2050","presentase_kenaikan_2022_2030","presentase_kenaikan_2030_2050")
+
+perbandingan_penduduk <- perbandingan_penduduk%>%mutate(jumlah_kenaikan_penurunan = presentase_kenaikan_2030_2050+presentase_kenaikan_2022_2030)
+
+perbandingan_penduduk <- perbandingan_penduduk%>%select(country_code,country,presentase_kenaikan_2022_2030,presentase_kenaikan_2030_2050,jumlah_kenaikan_penurunan)
+
+perbandingan_penduduk%>%filter(!is.na(jumlah_kenaikan_penurunan))%>%group_by(country_code)%>%arrange(jumlah_kenaikan_penurunan)%>%head(10)
+perbandingan_penduduk%>%group_by(country_code)%>%arrange(desc(jumlah_kenaikan_penurunan))%>%head(10)
+```
+
+Bulgaria mengalami penurunan sebesar 24% selama 20 tahun kedepan lalu
+diikuti Ukraine dan Jepang. Tetapi pada negara DR Congo mengalami
+kenaikan hingga mencapai 100% yaitu sebesar 99% selama 20 tahun kedepan
+
+Lalu untuk presentase negara indonesia adalah
+
+```{r}
+perbandingan_penduduk%>%filter(country=="Indonesia")%>%group_by(country_code)%>%arrange(country)%>%head(10)
+```
+
+Untuk Indonesia mengalami kenaikan penduduk sebanyak 8.5% selama 20
+tahun kedepan

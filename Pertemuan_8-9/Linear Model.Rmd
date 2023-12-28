@@ -1,0 +1,86 @@
+
+## OLS Simple Linear Model From Scratch
+```{r}
+
+# Sample data
+set.seed(123)
+x <- rnorm(100)
+y <- 2 * x + rnorm(100)
+
+# Function to perform OLS
+ols <- function(x, y) {
+  n <- length(y)
+  
+  # Calculate necessary sums
+  sum_x <- sum(x)
+  sum_y <- sum(y)
+  sum_xy <- sum(x * y)
+  sum_x_squared <- sum(x^2)
+  
+  # Calculate coefficients
+  beta_1 <- (n * sum_xy - sum_x * sum_y) / (n * sum_x_squared - sum_x^2)
+  beta_0 <- (sum_y - beta_1 * sum_x) / n
+  
+  return(c(beta_0, beta_1))
+}
+
+# Apply OLS
+ols_coefficients <- ols(x, y)
+
+# Display coefficients
+cat("Intercept (beta0):", ols_coefficients[1], "\n")
+cat("Slope (beta1):", ols_coefficients[2], "\n")
+
+```
+
+## Liner Model Using Gradient Descent
+
+```{r}
+# Function to calculate mean squared error
+mse <- function(y_true, y_pred) {
+  mean((y_true - y_pred)^2)
+}
+
+# Gradient Descent
+gradient_descent <- function(x, y, learning_rate = 0.01, epochs = 1000) {
+  n <- length(y)
+  w <- c(0, 0)  # Initialize weights
+  
+  for (epoch in 1:epochs) {
+    # Predictions
+    y_pred <- w[1] + w[2] * x
+    
+    # Update weights using gradient descent
+    w[1] <- w[1] - learning_rate * (1/n) * sum(y_pred - y)
+    w[2] <- w[2] - learning_rate * (1/n) * sum((y_pred - y) * x)
+    
+    # Calculate MSE for monitoring convergence
+    cost <- mse(y, y_pred)
+    
+    # Display progress every 100 epochs
+    if (epoch %% 100 == 0) {
+      cat("Epoch:", epoch, "  Cost:", cost, "\n")
+    }
+  }
+  
+  return(w)
+}
+
+# Apply Gradient Descent
+weights <- gradient_descent(x, y)
+
+# Display final weights
+cat("Final Weights:", weights, "\n")
+
+```
+
+## Liner Model Using LM Function
+
+```{r}
+# Fit linear model using OLS
+ols_model <- lm(y ~ x)
+
+# Display coefficients
+summary(ols_model)
+
+```

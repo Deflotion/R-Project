@@ -1,0 +1,66 @@
+## Logisctic Regression From Scratch
+
+```{r}
+# Dummy data example
+set.seed(123)
+x <- rnorm(100)
+logistic_prob <- 1 / (1 + exp(-(2 * x)))
+y <- rbinom(100, 1, logistic_prob)
+
+
+```
+
+```{r}
+# Function to calculate log likelihood
+log_likelihood <- function(y, y_pred) {
+  return(sum(y * log(y_pred) + (1 - y) * log(1 - y_pred)))
+}
+
+# Gradient Descent for Logistic Regression
+gradient_descent_logistic <- function(x, y, learning_rate = 0.01, epochs = 1000) {
+  n <- length(y)
+  X <- cbind(rep(1, n), x)  # Add a column of 1s for the intercept term
+  w <- rep(0, dim(X)[2])  # Initialize weights
+  
+  for (epoch in 1:epochs) {
+    # Predict probabilities
+    y_pred <- 1 / (1 + exp(-X %*% w))
+    
+    # Update weights using gradient descent
+    gradient <- t(X) %*% (y_pred - y) / n
+    w <- w - learning_rate * gradient
+    
+    # Calculate log-likelihood for monitoring convergence
+    log_likelihood_value <- log_likelihood(y, y_pred)
+    
+    # Display progress every 100 epochs
+    if (epoch %% 100 == 0) {
+      cat("Epoch:", epoch, "  Log-Likelihood:", log_likelihood_value, "\n")
+    }
+  }
+  
+  return(w)
+}
+
+# Apply Gradient Descent for logistic regression
+gd_logistic_coefficients <- gradient_descent_logistic(x, y)
+
+# Display coefficients
+cat("Intercept (beta0):", gd_logistic_coefficients[1], "\n")
+cat("Coefficient (beta1):", gd_logistic_coefficients[2], "\n")
+
+```
+
+## Using GLM
+```{r}
+# Sample data
+
+# Create a data frame
+data <- data.frame(x = x, y = y)
+
+# Fit logistic regression model
+logistic_model <- glm(y ~ x, data = data, family = binomial)
+
+# Display model summary
+summary(logistic_model)
+```
